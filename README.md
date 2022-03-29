@@ -1,5 +1,5 @@
 # AVR Simulator
-Simulator for AVR Instruction Set Architecture as taught in ELEC1601 ay USyd
+Simulator for AVR Instruction Set Architecture as taught in ELEC1601 at USyd. (Requires Python to run)
 
 Download the entire repository as is and run
 shell.py with a file passed to it to begin the
