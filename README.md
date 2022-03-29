@@ -17,9 +17,6 @@ For example:
 Key Commands:
 
     <Esc>   -> quit
-    
     <`>     -> run whole file
-    
     <=>     -> step through code
-    
     <\>     -> reset to beginning
