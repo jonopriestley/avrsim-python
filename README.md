@@ -11,10 +11,15 @@ passing in avr.txt (or another file of your
 choosing) as the avr code file to be executed.
 
 For example:
+
 python shell.py examples/triangle_nums.txt
 
 Key Commands:
+
     <Esc>   -> quit
+    
     <`>     -> run whole file
+    
     <=>     -> step through code
+    
     <\>     -> reset to beginning
