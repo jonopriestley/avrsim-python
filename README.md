@@ -5,6 +5,10 @@ The avr.txt file contains a file that is a
 scaffold, given as an example of what you
 may choose to do in AVR Basic Sim.
 
+Download the entire repository as is and run
+shell.py with a file passed to it to begin the
+simulator.
+
 To run the file open a terminal window
 in the folder and run the shell.py file,
 passing in avr.txt (or another file of your
