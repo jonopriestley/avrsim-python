@@ -3,7 +3,7 @@
 .section .data
 
 	a: .byte 104, 20, 30
-	b: .string "\n\"string\"", "\"string2\""
+	b: .string "\"string\"\n", "\"string2\"\n"
 	c: .asciz "asciz2"
 	d: .ascii "ascii"
 	e: .space 2, 240
