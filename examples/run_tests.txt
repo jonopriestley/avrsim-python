@@ -7,7 +7,7 @@
 	c: .asciz "asciz2"
 	d: .ascii "ascii"
 	e: .space 2, 240
-	f: .string "\nhello worlddd"
+	f: .string "hello world\n"
 	result: .space 1, 0xFF
 
 .section .text
