@@ -254,7 +254,7 @@ class Interpreter:
                     char = chr(K)
                     print(char, end = '') # prints the value
                     printed_string += char
-                print('')
+                # print('') -> can be used to add '\n' at the end of each line
 
                 ### Push
                 Rr = self.dmem[27].value
