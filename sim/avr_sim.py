@@ -387,7 +387,7 @@ class App:
         while self.interpreter.file_end == False:
             output = self.interpreter.step()
             if isinstance(output, str):
-                self.console_box.insert(END, output + '\n')
+                self.console_box.insert(END, output)
                 self.console_box.yview_moveto(1)
 
         self.display()
