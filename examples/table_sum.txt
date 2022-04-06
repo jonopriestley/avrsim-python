@@ -1,0 +1,37 @@
+.section .data
+
+tbl: .byte 6, 1, 3, 10, 5, 9, 12
+i: .byte 0
+total: .byte 0
+
+.section .text
+	.global main
+	
+main:
+
+	CLR R18
+	STS total, R18		;; total = 0
+
+	LDI R27, hi8(tbl)	;; tbl @ into X reg
+	LDI R26, lo8(tbl)
+
+	CLR R19				;; i = 0 in R19
+	LD R20, X+			;; R20 = length(tbl)
+
+loop:
+	CP R19, R20		;; i < length(tbl)
+	BRGE done		;; if i >= length(tbl) break
+
+	LD R21, X+		;; R21 = tbl[i], INC pointer
+	ADD R18, R21	;; total += tbl[i]
+
+	INC R19			;; i++
+	JMP loop		;; loop again
+
+done:
+	STS total, R18
+	STS i, R20
+    ret
+		
+.end
+

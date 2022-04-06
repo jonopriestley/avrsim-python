@@ -1,0 +1,45 @@
+; Turns all lower case letters in the
+; string to upper case then prints to
+; the console
+
+
+.section .data
+    str: .string "0a1b2c34de56fgHI\n"
+	
+.section .text
+    .global asm_function
+
+asm_function:
+	LDI R27, hi8(str)
+	LDI R26, lo8(str)
+
+loop:
+	LD R18, X+
+	CPI R18, 0
+	BREQ done
+	
+					; > 96 and < 123 is a lowercase letter
+	CPI R18, 97
+	BRLO loop		; Go to next character if this one isnt lower case
+	CPI R18, 123
+	BRSH loop		; Go to next character if this one isnt lower case
+
+	LDI R19, 32
+	SUB R18, R19	; Upper = Lower - 32
+	ST -X, R18		; Store back into data
+	LD R18, X+		; To increase X again to go to next letter
+	
+	JMP loop
+
+done:					; Print
+
+	LDI R18, hi8(str)
+	PUSH R18			; Push @ str(high) to the stack
+	LDI R18, lo8(str)
+	PUSH R18			; Push @ str(low) to the stack
+	CALL printf			; Print str
+	POP R0
+	POP R0
+	ret
+
+.end
