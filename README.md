@@ -14,10 +14,11 @@ For example:
 
 Key Commands:
 
-    <Esc>   -> quit
-    <`>     -> run whole file
-    <=>     -> step through code
-    <\>     -> reset to beginning
+    <Esc>        -> quit
+    <Ctrl+R>     -> run whole file
+    <Ctrl+S>     -> step through code
+    <Ctrl+E>     -> reset to beginning
+    <Ctrl+C>     -> clear console
 
 ## Donate
 If you like this product and want to support me
