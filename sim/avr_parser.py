@@ -63,6 +63,7 @@ class Parser:
         self.data = []
         self.data_locations = {}
         
+        ###### Parsing data section
         while self.section == '.data':
 
             pos_start = self.pos
@@ -92,6 +93,11 @@ class Parser:
             pos_start = self.pos
             if self.tok.type == TT_LABEL:
                 self.label_locations[self.tok.value] = inst_count
+                if len(self.line) > 1:
+                    self.advance()
+                    if self.tok.value in DOUBLE_LENGTH_INSTRUCTIONS:
+                        inst_count += 1
+                    inst_count += 1
             elif self.tok.type == TT_INST:
                 if self.tok.value in DOUBLE_LENGTH_INSTRUCTIONS:
                     inst_count += 1
@@ -114,10 +120,12 @@ class Parser:
         self.idx = text_begin_idx
         self.next_line()
 
-        #### Parsing
+        #### Parsing instruction section
         pc = 0
         while self.line != None:
             pos_start = self.pos.copy()
+            if (self.tok.type == TT_LABEL) and (len(self.line) > 1): # if there is an instruction in the line
+                self.advance()
             if self.tok.type == TT_INST:
                 add = False
                 if self.tok.value in DOUBLE_LENGTH_INSTRUCTIONS:
@@ -129,7 +137,7 @@ class Parser:
                     self.instructions.append(None)
                     pc += 1
                 pc += 1
-            elif self.tok.type == TT_LABEL:
+            elif (self.tok.type == TT_LABEL):
                 pass
             elif self.tok.type == TT_DIR:
                 if self.tok.value == 'end':
@@ -359,7 +367,7 @@ INST_REQUIREMENTS = {
     'BRVC': [TT_STRING],
     'BRVS': [TT_STRING],
     'BSET': [TT_INT],
-    'CALL': [[TT_STRING, TT_FNCT]],
+    'CALL': [[TT_STRING, TT_FNCT]],     # note: str,fnct is a list in a list, so it is optional to be str or fnct
     'CBI': [TT_INT, TT_COMMA, TT_INT],
     'CBR': [TT_REG, TT_COMMA, TT_INT],
     'CLC': [None],
