@@ -127,18 +127,18 @@ class Parser:
             if (self.tok.type == TT_LABEL) and (len(self.line) > 1): # if there is an instruction in the line
                 self.advance()
             if self.tok.type == TT_INST:
-                add = False
-                if self.tok.value in DOUBLE_LENGTH_INSTRUCTIONS:
-                    add = True
+                if self.tok.value in DOUBLE_LENGTH_INSTRUCTIONS: long_inst = True
+                else: long_inst = False
                 result = self.inst_parse(pc)
-                if result != None:
-                    return [], result
-                if add:
+                if result != None: return [], result
+                if long_inst:
                     self.instructions.append(None)
                     pc += 1
                 pc += 1
-            elif (self.tok.type == TT_LABEL):
-                pass
+            elif self.tok.type == TT_LABEL:
+                if len(self.line) > 1:
+                    pos_start.ln = self.line_nums[pos_start.ln]
+                    return [], InvalidInstructionError(pos_start, self.pos, "'" + self.tok.value + "'")
             elif self.tok.type == TT_DIR:
                 if self.tok.value == 'end':
                     if (self.line_num != ( len(self.lines) - 1 )):
@@ -327,7 +327,6 @@ class Parser:
         elif self.tok.value in ['section', 'global', 'end']:
             pos_start.ln = self.line_nums[pos_start.ln]
             return InvalidInstructionError(pos_start, self.pos, f'\'.{self.tok.value}\' is not a valid directive after a label')
-
 
 
 
