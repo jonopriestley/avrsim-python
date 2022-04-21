@@ -20,6 +20,15 @@ Key Commands:
     <Ctrl+E>     -> reset to beginning
     <Ctrl+C>     -> clear console
 
+## Code Theme
+If you wish to use the code theme to make your
+AVR code easier to navigate, I have provided an
+XML file that can be used in Notepad++ (a common
+code editing software). To use it, go to
+"Language > User Defined Language > Open User Defined Language Folder..."
+then put the file in that folder. It will then
+appear in the drop down list in the Language tab.
+
 ## Donate
 If you like this product and want to support me
 in its updating and refining for you and for future
