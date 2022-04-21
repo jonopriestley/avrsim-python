@@ -35,7 +35,7 @@
             <Keywords name="Delimiters">00&quot; 01 02&quot; 03&apos; 04 05&apos; 06( 07 08) 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
         </KeywordLists>
         <Styles>
-            <WordsStyle name="DEFAULT" fgColor="EAEAEA" bgColor="1E1E1E" fontName="Consolas" fontStyle="0" fontSize="12" nesting="0" />
+            <WordsStyle name="DEFAULT" fgColor="EAEAEA" bgColor="1E1E1E" colorStyle="0" fontName="Consolas" fontStyle="0" fontSize="12" nesting="0" />
             <WordsStyle name="COMMENTS" fgColor="72EBA3" bgColor="1E1E1E" fontStyle="0" nesting="0" />
             <WordsStyle name="LINE COMMENTS" fgColor="679755" bgColor="1E1E1E" fontStyle="0" nesting="0" />
             <WordsStyle name="NUMBERS" fgColor="B4D99B" bgColor="1E1E1E" fontStyle="0" nesting="0" />
