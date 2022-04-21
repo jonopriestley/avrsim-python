@@ -4,42 +4,55 @@
 
 
 .section .data
-    str: .string "0a1b2c34de56fgHI\n"
+    str: .string "lower UPPER 1234 QwErTy \n"
 	
 .section .text
     .global asm_function
 
 asm_function:
-	LDI R27, hi8(str)
-	LDI R26, lo8(str)
+	call print				; print the initial situation
+
+	;;;;; loop set up ;;;;;
+	ldi r27, hi8(str)		; load X with str location for the loop
+	ldi r26, lo8(str)
 
 loop:
-	LD R18, X+
-	CPI R18, 0
-	BREQ done
+	ld r18, X+
+	cpi r18, 0
+	breq end
 	
 					; > 96 and < 123 is a lowercase letter
-	CPI R18, 97
-	BRLO loop		; Go to next character if this one isnt lower case
-	CPI R18, 123
-	BRSH loop		; Go to next character if this one isnt lower case
+	cpi r18, 97
+	brlo loop		; Go to next character if this one isnt lower case
+	cpi r18, 123
+	brsh loop		; Go to next character if this one isnt lower case
 
-	LDI R19, 32
-	SUB R18, R19	; Upper = Lower - 32
-	ST -X, R18		; Store back into data
-	LD R18, X+		; To increase X again to go to next letter
+	ldi r19, 32
+	sub r18, r19	; Upper = Lower - 32
+	st -X, r18		; Store back into data
+	ld r18, X+		; To increase X again to go to next letter
 	
-	JMP loop
+	jmp loop
 
-done:					; Print
+print:					; Prints str string
 
-	LDI R18, hi8(str)
-	PUSH R18			; Push @ str(high) to the stack
-	LDI R18, lo8(str)
-	PUSH R18			; Push @ str(low) to the stack
-	CALL printf			; Print str
-	POP R0
-	POP R0
+	ldi r18, hi8(str)
+	push r18			; Push @ str(high) to the stack
+	ldi r18, lo8(str)
+	push r18			; Push @ str(low) to the stack
+	call printf			; Print str
+	pop r0
+	pop r0
+	ret
+
+end:
+	call print
 	ret
 
 .end
+
+
+
+
+
+
