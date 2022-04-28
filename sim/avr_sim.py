@@ -27,7 +27,7 @@ class App:
         self.root.title('AVR Basic Sim')
 
         ########## Key Binds ##########
-        self.root.bind("<Escape>", lambda e: self.root.quit())          # exit with < Esc >
+        self.root.bind("<Escape>", lambda e: self.root.quit())              # exit with < Esc >
         self.root.bind("<Control-r>", lambda e: self.run())                 # run with < Ctrl+R >
         self.root.bind("<Control-s>", lambda e: self.step())                # step with < Ctrl+S >
         self.root.bind("<Control-e>", lambda e: self.reset())               # reset with < Ctrl+E >
@@ -37,6 +37,7 @@ class App:
         w = 'white'
         b = 'black'
         o = 'orange'
+        g = 'gray12'
         self.text_colour = b        # colour of all text in boxes
         self.text_bg = w            # background of text boxes
         self.background = o         # background of the screen
@@ -44,6 +45,15 @@ class App:
         self.label_text = w         # colour of the title text
         self.button_text = b        # colour of text on buttons
         self.button_colour = w      # colour of the buttons
+
+        # Testing
+        self.text_colour = b        # colour of all text in boxes
+        self.text_bg = w            # background of text boxes
+        self.background = g         # background of the screen
+        self.label_colour = b       # colour of the title labels
+        self.label_text = w         # colour of the title text
+        self.button_text = b        # colour of text on buttons
+        self.button_colour = o      # colour of the buttons
 
         self.font = 'Calibri'
 
@@ -160,7 +170,7 @@ class App:
         inst_width = round(self.ww/6)
         inst_height = round(self.wh/1.3)
 
-        inst_box = Text(self.root,height=round(inst_height/16.5),width=round(inst_width/8.5),bg=self.text_bg,borderwidth=5,relief='sunken')
+        inst_box = Text(self.root,height=round(inst_height/16.5),width=round(inst_width/8.5),bg=self.text_bg,fg=self.text_colour,borderwidth=5,relief='sunken')
         inst_box.place(relx=instx, rely=insty, anchor = 'n')
 
         inst_title = Frame(self.root, bg=self.label_colour,height=30,width=inst_width)
@@ -194,7 +204,7 @@ class App:
         ram_width = round(self.ww/6)
         ram_height = round(self.wh/1.3)
 
-        ram_box = Text(self.root,height=round(ram_height/16.5),width=round(ram_width/8.5),bg=self.text_bg,borderwidth=5,relief='sunken')
+        ram_box = Text(self.root,height=round(ram_height/16.5),width=round(ram_width/8.5),bg=self.text_bg,fg=self.text_colour,borderwidth=5,relief='sunken')
         ram_box.place(relx=ramx, rely=ramy, anchor = 'n')
 
         ram_title = Frame(self.root, bg=self.label_colour,height=30,width=inst_width)
@@ -287,7 +297,7 @@ class App:
         to be inputted to.
         """
         ########## Step Size ##########
-        self.step_box = Text(self.root,height=1,width=10,bg=self.text_bg,borderwidth=4,relief='sunken',font=(self.font,20))
+        self.step_box = Text(self.root,height=1,width=10,bg=self.text_bg,fg=self.text_colour,borderwidth=4,relief='sunken',font=(self.font,20))
         self.step_box.place(relx=0.085,rely=0.40, anchor = 'n')
         self.step_box.insert(END, '1') # initial step size
 
@@ -298,7 +308,7 @@ class App:
         inst_y_label = Label(self.root,text='Instructions at:',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
         inst_y_label.place(relx=0.085,rely=0.46, anchor = 'n')
 
-        self.inst_y_box = Text(self.root,height=1,width=10,bg=self.text_bg,borderwidth=4,relief='sunken',font=(self.font,20))
+        self.inst_y_box = Text(self.root,height=1,width=10,bg=self.text_bg,fg=self.text_colour,borderwidth=4,relief='sunken',font=(self.font,20))
         self.inst_y_box.place(relx=0.085,rely=0.5, anchor = 'n')
         self.inst_y_box.insert(END, '0') # initial location
 
@@ -309,7 +319,7 @@ class App:
         ram_y_label = Label(self.root,text='RAM at:',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
         ram_y_label.place(relx=0.085,rely=0.56, anchor = 'n')
 
-        self.ram_y_box = Text(self.root,height=1,width=10,bg=self.text_bg,borderwidth=4,relief='sunken',font=(self.font,20))
+        self.ram_y_box = Text(self.root,height=1,width=10,bg=self.text_bg,fg=self.text_colour,borderwidth=4,relief='sunken',font=(self.font,20))
         self.ram_y_box.place(relx=0.085,rely=0.6, anchor = 'n')
         self.ram_y_box.insert(END, '0x100') # initial location
 
@@ -318,7 +328,7 @@ class App:
         othery = 0.05
         other_width = round(self.ww/6)
 
-        self.console_box = Text(self.root,height=round(self.wh/53),width=round(other_width/8.5),bg=self.text_bg,borderwidth=5,relief='sunken')
+        self.console_box = Text(self.root,height=round(self.wh/53),width=round(other_width/8.5),bg=self.text_bg,fg=self.text_colour,borderwidth=5,relief='sunken')
         self.console_box.place(relx=otherx, rely=othery+0.456, anchor = 'n')
 
         self.console_box_title = Frame(self.root, bg=self.label_colour,height=30,width=other_width)
@@ -406,7 +416,7 @@ class App:
         for repeat in range(step_size):
             output = self.interpreter.step()
             if isinstance(output, str):
-                self.console_box.insert(END, output + '\n')
+                self.console_box.insert(END, output)
                 self.console_box.yview_moveto(1)
         
         self.display()
@@ -459,9 +469,12 @@ class App:
             if (self.ram_disp == 'TEXT'):
                 if val == 0:
                     return 'NULL'
-                if (val < 32) or (val > 127):
+                if (val > 31) and (val < 127):
+                    return chr(val)
+                if val == 10:
+                    return '\\n'
+                if (val < 32) or (val > 126):
                     return 'N/A'
-                return chr(val)
             if (self.num_disp == 'TCOMP'): return val # dont do 2s comp on ram values, just do dec
 
         if self.num_disp == 'DEC':
@@ -489,4 +502,3 @@ class App:
             if (val > 0x7F) and (val < 0x100): return val - 0x100
             elif (val > 0x7FFF): return val - 0x10000
             return val
-

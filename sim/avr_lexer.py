@@ -155,17 +155,21 @@ class Lexer:
             tok.value = (-1 * tok.value) % 256
             return tok
 
-        if char_str == 'X': return Token(TT_X)
-        elif char_str == 'Y': return Token(TT_Y)
-        elif char_str == 'Z': return Token(TT_Z)
-        elif char_str == 'X+': return Token(TT_XP)
-        elif char_str == '-X': return Token(TT_MX)
-        elif char_str == 'Y+': return Token(TT_YP)
-        elif char_str == '-Y': return Token(TT_MY)
-        elif char_str == 'Z+': return Token(TT_ZP)
-        elif char_str == '-Z': return Token(TT_MZ)
-        else:
-            return InvalidInstructionError(pos_start, self.pos, "'" + char_str + "'")
+        XYZ_dict = {
+            'X': TT_X,
+            'Y': TT_Y,
+            'Z': TT_Z,
+            'X+': TT_XP,
+            '-X': TT_MX,
+            'Y+': TT_YP,
+            '-Y': TT_MY,
+            'Z+': TT_ZP,
+            '-Z': TT_MZ,
+        }
+
+        if char_str in XYZ_dict: return Token(XYZ_dict[char_str])
+
+        else: return InvalidInstructionError(pos_start, self.pos, "'" + char_str + "'")
 
     def make_InstRegLabelStrDir(self, directive=None):
         """
