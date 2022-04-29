@@ -7,7 +7,6 @@ path.insert(1, sim_path)
 from avr_sim import * # import from avr_sim file in sim
 
 
-
 """
 To add a new instruction:
 - Add to INST_LIST (in lexer.py)
@@ -24,23 +23,22 @@ To add a new directive:
 ##### ord('a') returns ascii number for 'a' (0x61)
 ##### chr(0x61) returns 0x61 element in ascii table ('a')
 
-
-
 ######################################
 #  RUN
 ######################################
 
 def run(fn, text):
 
+    ########### Tokenizer ###########
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
     if error:
         return tokens, error.as_string()
 
-    
-    line_nums = tokens[-1]
-    tokens = tokens[0:(len(tokens) - 1)] # removing line nums from last pos in tokens
+    line_nums = tokens[-1]                  # allocating the locations of each line
+    tokens = tokens[0:(len(tokens) - 1)]    # removing line nums from last pos in tokens
 
+    ########### Parser ###########
     parser = Parser(fn, tokens, line_nums)
     result, error = parser.parse()
     if error:
@@ -52,13 +50,12 @@ def run(fn, text):
         if i < len(instructions): PMEM[i] = instructions[i]
         else: PMEM[i] = ['NOP']
 
-
     data = result[1]
     for i in range(len(data)):
         DMEM[i + 0x100] = data[i]
 
-
-    do_app = True # make false to run in terminal
+    ########### Interpreter ###########
+    do_app = True   # make false to run in terminal
     if do_app:
         data = [DMEM, PMEM, fn, len_inst]
         root = Tk()
@@ -68,9 +65,12 @@ def run(fn, text):
         return result, error
 
 
+
+
     ######## For running in the terminal only
 
     interpreter = Interpreter(DMEM, PMEM, fn, len_inst)
+
     while True:
         
         i = input('\nINPUT: ')
@@ -107,4 +107,3 @@ def run(fn, text):
             break
 
     return result, error
-

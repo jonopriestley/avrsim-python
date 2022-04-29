@@ -421,7 +421,7 @@ INST_REQUIREMENTS = {
     'SEV': [None],
     'SEZ': [None],
     'ST': [[TT_X, TT_Y, TT_Z, TT_XP, TT_YP, TT_ZP, TT_MX, TT_MY, TT_MZ], TT_COMMA, TT_REG],
-    'STD': [[TT_XP, TT_YP, TT_ZP], TT_INT, TT_COMMA, TT_REG],
+    'STD': [[TT_YP, TT_ZP], TT_INT, TT_COMMA, TT_REG],
     'STS': [[TT_STRING, TT_INT], TT_COMMA, TT_REG],
     'SUB': [TT_REG, TT_COMMA, TT_REG],
     'SUBI': [TT_REG, TT_COMMA, TT_INT],

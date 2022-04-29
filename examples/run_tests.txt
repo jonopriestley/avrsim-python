@@ -3,7 +3,7 @@
 .section .data
 
 	a: .byte 104, 20, 30
-	b: .string "\n\"string\"\n", "\"string2\""
+	b: .string "\"string\"\n", "\"string2\""
 	c: .asciz "asciz2"
 	d: .ascii "ascii"
 	e: .space 2, 240
@@ -119,7 +119,7 @@
 		sev
 		sez
 		st X+, r18
-		std X+3, r19
+		std Y+3, r19
 		sts result, r19
 		sub r18, r19
 		subi r19, 2

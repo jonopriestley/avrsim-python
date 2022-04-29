@@ -2,9 +2,8 @@
 ; string to upper case then prints to
 ; the console
 
-
 .section .data
-    str: .string "lower UPPER 1234 QwErTy \n"
+    str: .string "lower UPPER 1234 QwErTy\n"
 	
 .section .text
     .global asm_function
@@ -22,12 +21,12 @@ loop:
 	breq end
 	
 					; > 96 and < 123 is a lowercase letter
-	cpi r18, 97
+	cpi r18, 97		; 97 = 0x61
 	brlo loop		; Go to next character if this one isnt lower case
-	cpi r18, 123
+	cpi r18, 123	; 123 = 0x61 + 26 (26 letters)
 	brsh loop		; Go to next character if this one isnt lower case
 
-	ldi r19, 32
+	ldi r19, 32		; 0x20
 	sub r18, r19	; Upper = Lower - 32
 	st -X, r18		; Store back into data
 	ld r18, X+		; To increase X again to go to next letter
