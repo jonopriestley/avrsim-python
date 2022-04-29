@@ -82,7 +82,7 @@
 		ldi r26, lo8(a)
 		ld r20, X+
 		ld r20, X
-		ldd r20, X+4
+		ldd r20, Y+61
 		lds r20, a
 		lsl r20
 		lsr r20

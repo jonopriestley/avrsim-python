@@ -388,7 +388,7 @@ INST_REQUIREMENTS = {
     'INC': [TT_REG],
     'JMP': [TT_STRING],
     'LD': [TT_REG, TT_COMMA, [TT_X, TT_Y, TT_Z, TT_XP, TT_YP, TT_ZP, TT_MX, TT_MY, TT_MZ] ],
-    'LDD': [TT_REG, TT_COMMA, [TT_XP, TT_YP, TT_ZP], TT_INT],
+    'LDD': [TT_REG, TT_COMMA, [TT_YP, TT_ZP], TT_INT],
     'LDI': [TT_REG, TT_COMMA, [TT_INT, TT_LO8, TT_HI8]],
     'LDS': [TT_REG, TT_COMMA, [TT_STRING, TT_INT]],
     'LSL': [TT_REG],
