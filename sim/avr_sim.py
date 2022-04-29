@@ -185,6 +185,7 @@ class App:
             elif len(inst_ls) == 1: inst = f'{i}: {inst_ls[0]}\n'
             elif len(inst_ls) == 2: inst = f'{i}: {inst_ls[0]} {inst_ls[1]}\n'
             elif len(inst_ls) == 3: inst = f'{i}: {inst_ls[0]} {inst_ls[1]}, {inst_ls[2]}\n'
+            elif inst_ls[0] == 'STD': inst = f'{i}: {inst_ls[0]} {inst_ls[1]}{inst_ls[2]}, {inst_ls[3]}\n'
             inst_box.insert(END, inst)
 
         inst_scrollbar = Scrollbar(self.root, orient='vertical',command=inst_box.yview)
