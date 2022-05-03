@@ -1,5 +1,6 @@
 from avr_pos import *
 from avr_lexer import *
+from avr_error import RETError
 
 ######################################
 #  INTERPRETER
@@ -25,6 +26,8 @@ class Interpreter:
 
         self.pmem_length = len(self.pmem)
         self.dmem_length = len(self.dmem)
+
+        self.pushpop = 0 # increment on a push, decrement on a pop
 
     def copy(self):
         return Interpreter(self.dmem, self.pmem, self.fn, self.inst_length)
@@ -229,6 +232,7 @@ class Interpreter:
                 self.dmem[self.get_SP()] = 0 # adding to stack the 3rd byte
                 k = int(self.current_inst[1])
                 self.update_pc_val(k)
+                self.pushpop += 3
 
             elif self.current_inst[1] == 'PRINTF':
                 ### Pop
@@ -600,16 +604,21 @@ class Interpreter:
             self.update_pc_val(self.get_pc_val() + 1)
 
         elif inst == 'POP':
-            STACK = self.dmem[self.get_SP()]
-            self.dmem[int(self.current_inst[1][1:])].set_value(STACK)
-            self.increment_SP()
-            self.update_pc_val(self.get_pc_val() + 1)
+            if self.pushpop > 0:
+                STACK = self.dmem[self.get_SP()]
+                self.dmem[int(self.current_inst[1][1:])].set_value(STACK)
+                self.increment_SP()
+                self.update_pc_val(self.get_pc_val() + 1)
+                self.pushpop -= 1
+            else:
+                print('No elements left to pop.')
             
         elif inst == 'PUSH':
             Rr = self.dmem[int(self.current_inst[1][1:])].value
             self.decrement_SP()
             self.dmem[self.get_SP()] = Rr
             self.update_pc_val(self.get_pc_val() + 1)
+            self.pushpop += 1
 
         elif inst == 'RJMP':
             k = int(self.current_inst[1])
@@ -628,7 +637,10 @@ class Interpreter:
                 self.increment_SP()
                 kL = self.dmem[self.get_SP()] # return location(low) from the stack
                 self.increment_SP()
-                self.update_pc_val((256 * kH) + kL)
+                self.pushpop -= 3
+                if self.pushpop < 0:
+                    return RETError(self.get_pc_val(), 'Too many pops from the stack to return correctly.')
+                else: self.update_pc_val((256 * kH) + kL)
 
         elif inst == 'ROL':
             R = self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value) + str(self.sreg.value[7])

@@ -31,3 +31,16 @@ class UnexpectedValue(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Unexpected Value', details)
 
+class RETError():  # Used for interpreter
+    def __init__(self, pos, details):
+        self.pos = pos
+        self.details = details
+
+    def __repr__(self):
+        result = f'RET Error: {self.details}\nInstruction {self.pos}\n'
+        return result
+
+    def as_string(self):
+        return self.__repr__()
+        
+

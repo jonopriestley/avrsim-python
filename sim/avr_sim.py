@@ -288,7 +288,7 @@ class App:
         SPH_val_label = Label(self.root,text=SPH_val,font=(self.font,15),bg=self.text_bg,fg=self.text_colour)
         SPH_val_label.place(relx=otherx-0.07,rely=othery+0.32, anchor = 'nw')
 
-        SP_val = f'SP: {self.interpreter.get_SP()}'
+        SP_val = f'SP: {hex(self.interpreter.get_SP())}'
         SP_val_label = Label(self.root,text=SP_val,font=(self.font,15),bg=self.text_bg,fg=self.text_colour)
         SP_val_label.place(relx=otherx-0.07,rely=othery+0.36, anchor = 'nw')
 
@@ -408,6 +408,11 @@ class App:
                 self.console_box.insert(END, output)
                 self.console_box.yview_moveto(1)
 
+            if isinstance(output, RETError):  # RET error
+                self.console_box.insert(END, output)
+                self.console_box.yview_moveto(1)
+                break
+
         self.display()
 
     def step(self):
@@ -419,6 +424,10 @@ class App:
             if isinstance(output, str):
                 self.console_box.insert(END, output)
                 self.console_box.yview_moveto(1)
+            if isinstance(output, RETError):  # RET error
+                self.console_box.insert(END, output)
+                self.console_box.yview_moveto(1)
+                break
         
         self.display()
 
