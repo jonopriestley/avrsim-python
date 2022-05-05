@@ -27,7 +27,7 @@ class Interpreter:
         self.pmem_length = len(self.pmem)
         self.dmem_length = len(self.dmem)
 
-        self.pushpop = 0 # increment on a push, decrement on a pop
+        self.pushpop = [0] # counting (pushes - pops) for each subroutine layer
 
     def copy(self):
         return Interpreter(self.dmem, self.pmem, self.fn, self.inst_length)
@@ -232,7 +232,8 @@ class Interpreter:
                 self.dmem[self.get_SP()] = 0 # adding to stack the 3rd byte
                 k = int(self.current_inst[1])
                 self.update_pc_val(k)
-                self.pushpop += 3
+                self.pushpop[-1] += 3
+                self.pushpop.append(0)
 
             elif self.current_inst[1] == 'PRINTF':
                 ### Pop
@@ -604,21 +605,21 @@ class Interpreter:
             self.update_pc_val(self.get_pc_val() + 1)
 
         elif inst == 'POP':
-            if self.pushpop > 0:
+            if self.pushpop[0] > 0: # check if the top layer has no elements left (ie nothing left in stack)
                 STACK = self.dmem[self.get_SP()]
                 self.dmem[int(self.current_inst[1][1:])].set_value(STACK)
                 self.increment_SP()
                 self.update_pc_val(self.get_pc_val() + 1)
-                self.pushpop -= 1
+                self.pushpop[-1] -= 1
             else:
-                print('No elements left to pop.')
+                return RETError(self.get_pc_val(), 'No elements left to pop.')
             
         elif inst == 'PUSH':
             Rr = self.dmem[int(self.current_inst[1][1:])].value
             self.decrement_SP()
             self.dmem[self.get_SP()] = Rr
             self.update_pc_val(self.get_pc_val() + 1)
-            self.pushpop += 1
+            self.pushpop[-1] += 1
 
         elif inst == 'RJMP':
             k = int(self.current_inst[1])
@@ -631,16 +632,24 @@ class Interpreter:
                 self.file_end = True
 
             else:
-                kHH = self.dmem[self.get_SP()] # return location(3rd byte) from the stack
+                kHH = self.dmem[self.get_SP()]  # return location(3rd byte) from the stack
                 self.increment_SP()
-                kH = self.dmem[self.get_SP()] # return location(high) from the stack
+                kH = self.dmem[self.get_SP()]   # return location(high) from the stack
                 self.increment_SP()
-                kL = self.dmem[self.get_SP()] # return location(low) from the stack
+                kL = self.dmem[self.get_SP()]   # return location(low) from the stack
                 self.increment_SP()
-                self.pushpop -= 3
-                if self.pushpop < 0:
-                    return RETError(self.get_pc_val(), 'Too many pops from the stack to return correctly.')
-                else: self.update_pc_val((256 * kH) + kL)
+                if self.pushpop[-1] < 0:        # must have balanced stack pushes & pops to return correctly
+                    return RETError(self.get_pc_val(), f'{-1 * self.pushpop[-1]} too many pops from the stack to return correctly.')
+                elif self.pushpop[-1] > 0:        # must have balanced stack pushes & pops to return correctly
+                    return RETError(self.get_pc_val(), f'{self.pushpop[-1]} too many pushes to the stack to return correctly.')
+                
+                self.pushpop.pop(-1)
+                if len(self.pushpop) == 0:
+                    self.file_end = True
+                    
+                else:
+                    self.pushpop[-1] -= 3
+                    self.update_pc_val((256 * kH) + kL)
 
         elif inst == 'ROL':
             R = self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value) + str(self.sreg.value[7])
