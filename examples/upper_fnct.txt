@@ -9,10 +9,11 @@
     .global asm_function
 
 asm_function:
-	call print				; print the initial situation
+	call print_fnct		; print the initial situation
 
 	;;;;; loop set up ;;;;;
-	ldi r27, hi8(str)		; load X with str location for the loop
+	
+	ldi r27, hi8(str)	; load X with str location for the loop
 	ldi r26, lo8(str)
 
 loop:
@@ -20,20 +21,20 @@ loop:
 	cpi r18, 0
 	breq end
 	
-					; > 96 and < 123 is a lowercase letter
-	cpi r18, 97		; 97 = 0x61
-	brlo loop		; Go to next character if this one isnt lower case
-	cpi r18, 123	; 123 = 0x61 + 26 (26 letters)
-	brsh loop		; Go to next character if this one isnt lower case
+						; > 96 and < 123 is a lowercase letter
+	cpi r18, 97			; 97 = 0x61
+	brlo loop			; Go to next character if this one isnt lower case
+	cpi r18, 123		; 123 = 0x61 + 26 (26 letters)
+	brsh loop			; Go to next character if this one isnt lower case
 
-	ldi r19, 32		; 0x20
-	sub r18, r19	; Upper = Lower - 32
-	st -X, r18		; Store back into data
-	ld r18, X+		; To increase X again to go to next letter
+	ldi r19, 32			; 0x20
+	sub r18, r19		; Upper = Lower - 32
+	st -X, r18			; Store back into data
+	ld r18, X+			; To increase X again to go to next letter
 	
 	jmp loop
 
-print:					; Prints str string
+print_fnct:				; Prints str string
 
 	ldi r18, hi8(str)
 	push r18			; Push @ str(high) to the stack
@@ -45,13 +46,7 @@ print:					; Prints str string
 	ret
 
 end:
-	call print
+	call print_fnct
 	ret
 
 .end
-
-
-
-
-
-
