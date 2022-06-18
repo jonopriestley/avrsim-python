@@ -181,11 +181,30 @@ class App:
 
         for i in range(self.pmem_length): # inserting into box
             inst_ls = self.interpreter.pmem[i]
-            if inst_ls == None: inst = f'{i}: (double size inst.)\n'
-            elif len(inst_ls) == 1: inst = f'{i}: {inst_ls[0]}\n'
-            elif len(inst_ls) == 2: inst = f'{i}: {inst_ls[0]} {inst_ls[1]}\n'
-            elif len(inst_ls) == 3: inst = f'{i}: {inst_ls[0]} {inst_ls[1]}, {inst_ls[2]}\n'
-            elif inst_ls[0] == 'STD': inst = f'{i}: {inst_ls[0]} {inst_ls[1]}{inst_ls[2]}, {inst_ls[3]}\n'
+            if self.num_disp == 'BIN': # binary instructions
+                if inst_ls == None: inst = self.interpreter.get_binary_instruction(self.interpreter.pmem[i-1])[1]
+                else: inst = self.interpreter.get_binary_instruction(inst_ls)
+
+                if isinstance(inst, list): inst = inst[0]
+                inst = f'{i}: {inst}\n'
+            
+            elif self.num_disp == 'HEX': # hex instructions
+                if inst_ls == None: inst = self.interpreter.get_binary_instruction(self.interpreter.pmem[i-1])[1]
+                else: inst = self.interpreter.get_binary_instruction(inst_ls)
+                if isinstance(inst, list): inst = inst[0]
+                inst = hex(int(inst, 2))
+                for l in range(len(inst), 6):
+                    inst = inst[0:2] + '0' + inst[2:]
+                inst = f'{i}: {inst}\n'
+
+            else: # regular instructions
+                if inst_ls == None: inst = f'{i}: (double size inst.)\n'
+                elif len(inst_ls) == 1: inst = f'{i}: {inst_ls[0]}\n'
+                elif len(inst_ls) == 2: inst = f'{i}: {inst_ls[0]} {inst_ls[1]}\n'
+                elif len(inst_ls) == 3: inst = f'{i}: {inst_ls[0]} {inst_ls[1]}, {inst_ls[2]}\n'
+                elif inst_ls[0] == 'STD': inst = f'{i}: {inst_ls[0]} {inst_ls[1]}{inst_ls[2]}, {inst_ls[3]}\n'
+                elif inst_ls[0] == 'LDD': inst = f'{i}: {inst_ls[0]} {inst_ls[1]}, {inst_ls[2]}{inst_ls[3]}\n'
+            
             inst_box.insert(END, inst)
 
         inst_scrollbar = Scrollbar(self.root, orient='vertical',command=inst_box.yview)

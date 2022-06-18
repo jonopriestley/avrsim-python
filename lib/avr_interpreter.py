@@ -949,3 +949,443 @@ class Interpreter:
         if self.pch.name != 'PCH': return UnexpectedValue(pos_start, self.pos, "Incorrect PC(high) location")
         return (256 * self.pch.value) + self.pcl.value
 
+    def make_n_bit_binary(self, integer, n: int):
+        """
+        Returns binary value of length \'n\' without
+        the \'0b\' at the front.
+        """
+
+        b = bin(int(integer))[2:]
+        l = len(b)
+
+        if l > n: return b[0:n+1]
+        
+        while l < n: # extending the length
+            b = '0' + b
+            l += 1
+        return b
+
+    def twos_comp(self, val, bits):
+        """
+        Returns the 2's comp of a value for
+        a given number of bits.
+        """
+
+        if val >= 0:
+            return '0' + self.make_n_bit_binary(val, bits - 1)
+        
+        b = bin((2 ** (bits - 1)) + val)[2:]    # flip bits and add 1
+        
+        l = len(b)
+        while l < bits - 1:
+            b = '0' + b
+            l += 1
+        b = '1' + b
+        return b
+
+    def get_binary_instruction(self, instruction: list):
+        """
+        Returns string or list of strings.
+        """
+        inst = instruction[0]
+
+        if inst == 'ADC':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'000111{r[0]}{d}{r[1:]}'
+
+        elif inst == 'ADD':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'000011{r[0]}{d}{r[1:]}'
+
+        elif inst == 'AND':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'001000{r[0]}{d}{r[1:]}'
+        
+        elif inst == 'ANDI':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            K = self.make_n_bit_binary(instruction[2], 8) # reg number converted to binary
+            return f'0111{K[0:4]}{d[1:]}{K[4:]}'
+
+        elif inst == 'BCLR':
+            s = self.make_n_bit_binary(instruction[1], 3)
+            return f'100101001{s}1000'
+
+        elif inst == 'BRBC':
+            s = self.make_n_bit_binary(instruction[1], 3)
+            k = self.twos_comp(instruction[2], 7)
+            return f'111101{k}{s}'
+
+        elif inst == 'BRBS':
+            s = self.make_n_bit_binary(instruction[1], 3)
+            k = self.twos_comp(instruction[2], 7)
+            return f'111100{k}{s}'
+
+        elif inst == 'BRCC':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111101{k}000'
+
+        elif inst == 'BRCS':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111100{k}000'
+
+        elif inst == 'BREQ':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111100{k}001'
+
+        elif inst == 'BRGE':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111101{k}100'
+
+        elif inst == 'BRHC':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111101{k}101'
+
+        elif inst == 'BRHS':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111100{k}101'
+
+        elif inst == 'BRID':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111101{k}111'
+
+        elif inst == 'BRIE':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111100{k}111'
+
+        elif inst == 'BRLO':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111100{k}000'
+
+        elif inst == 'BRLT':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111100{k}100'
+
+        elif inst == 'BRMI':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111100{k}010'
+
+        elif inst == 'BRNE':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111101{k}001'
+
+        elif inst == 'BRPL':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111101{k}010'
+            
+        elif inst == 'BRSH':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111101{k}000'
+
+        elif inst == 'BRTC':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111101{k}110'
+
+        elif inst == 'BRTS':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111100{k}110'
+
+        elif inst == 'BRVC':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111101{k}011'
+
+        elif inst == 'BRVS':
+            k = self.twos_comp(instruction[1], 7)
+            return f'111100{k}011'
+
+        elif inst == 'BSET':
+            s = self.make_n_bit_binary(instruction[1], 3)
+            return f'100101000{s}1000'
+
+        elif inst == 'CALL':
+            if instruction[1] == 'PRINTF':
+                return ['1001010111111111', '1111111111111111']
+            else:
+                k = self.make_n_bit_binary(instruction[1], 22)
+                return [f'1001010{k[0:5]}111{k[5]}', k[6:]]
+
+        elif inst == 'CBI':
+            A = self.make_n_bit_binary(instruction[1], 5)
+            b = self.make_n_bit_binary(instruction[2], 3)
+            return f'10011000{A}{b}'
+
+        elif inst == 'CBR':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            K = self.make_n_bit_binary(255 - instruction[2], 8) # reg number converted to binary
+            return f'0111{K[0:4]}{d[1:]}{K[4:]}'
+
+        elif inst == 'CLC':
+            return '1001010010001000'
+
+        elif inst == 'CLH':
+            return '1001010011011000'
+            
+        elif inst == 'CLI':
+            return '1001010011111000'
+
+        elif inst == 'CLN':
+            return '1001010010101000'
+
+        elif inst == 'CLR':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'001001{d[0]}{d}{d[1:]}'
+
+        elif inst == 'CLS':
+            return '1001010011001000'
+
+        elif inst == 'CLT':
+            return '1001010011101000'
+
+        elif inst == 'CLV':
+            return '1001010010111000'
+
+        elif inst == 'CLZ':
+            return '1001010010011000'
+
+        elif inst == 'COM':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001010{d}0000'
+
+        elif inst == 'CP':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'000101{r[0]}{d}{r[1:]}'
+
+        elif inst == 'CPC':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'000001{r[0]}{d}{r[1:]}'
+
+        elif inst == 'CPI':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            K = self.make_n_bit_binary(instruction[2], 8) # reg number converted to binary
+            return f'0011{K[0:4]}{d[1:]}{K[4:]}'
+
+        elif inst == 'DEC':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001010{d}1010'
+
+        elif inst == 'EOR':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'001001{r[0]}{d}{r[1:]}'
+
+        elif inst == 'IN':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            A = self.make_n_bit_binary(instruction[2], 6) # reg number converted to binary
+            return f'10110{A[0:2]}{d}{A[2:]}'
+
+        elif inst == 'INC':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001010{d}0011'
+
+        elif inst == 'JMP':
+            k = self.make_n_bit_binary(instruction[1], 22)
+            return [f'1001010{k[0:5]}110{k[5]}', k[6:]]
+
+        elif inst == 'LD':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            if instruction[2] == 'X':
+                return f'1001000{d}1100'
+            elif instruction[2] == 'X+':
+                return f'1001000{d}1101'
+            elif instruction[2] == '-X':
+                return f'1001000{d}1110'
+            elif instruction[2] == 'Y':
+                return f'1000000{d}1000'
+            elif instruction[2] == 'Y+':
+                return f'1001000{d}1001'
+            elif instruction[2] == '-Y':
+                return f'1001000{d}1010'
+            elif instruction[2] == 'Z':
+                return f'1000000{d}0000'
+            elif instruction[2] == 'Z+':
+                return f'1001000{d}0001'
+            elif instruction[2] == '-Z':
+                return f'1001000{d}0010'
+        
+        elif inst == 'LDD':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            q = self.make_n_bit_binary(instruction[3], 6) # reg number converted to binary
+            if instruction[2] == 'Y+':
+                return f'10{q[0]}0{q[1:3]}0{d}1{q[3:]}'
+            elif instruction[2] == 'Z+':
+                return f'10{q[0]}0{q[1:3]}0{d}0{q[3:]}'
+        
+        elif inst == 'LDI':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            K = self.make_n_bit_binary(instruction[2], 8) # reg number converted to binary
+            return f'1110{K[0:4]}{d[1:]}{K[4:]}'
+        
+        elif inst == 'LDS':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            k = self.make_n_bit_binary(instruction[2], 16) # reg number converted to binary
+            return f'1001000{d}0000{k}'
+        
+        elif inst == 'LSL':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'000011{d[0]}{d}{d[1:]}'
+
+        elif inst == 'LSR':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001010{d}0110'
+
+        elif inst == 'MOV':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'001011{r[0]}{d}{r[1:]}'
+        
+        elif inst == 'MUL':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'100111{r[0]}{d}{r[1:]}'
+
+        elif inst == 'MULS':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'00000010{d[1:]}{r[1:]}'
+
+        elif inst == 'MULSU':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'000000110{d[2:]}0{r[2:]}'
+
+        elif inst == 'NEG':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001010{d}0001'
+
+        elif inst == 'NOP':
+            return '0000000000000000'
+        
+        elif inst == 'OR':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'001010{r[0]}{d}{r[1:]}'
+
+        elif inst == 'ORI':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            K = self.make_n_bit_binary(instruction[2], 8) # reg number converted to binary
+            return f'0110{K[0:4]}{d[1:]}{K[4:]}'
+
+        elif inst == 'OUT':
+            A = self.make_n_bit_binary(instruction[1], 6) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'10111{A[0:2]}{r}{A[2:]}'
+
+        elif inst == 'POP':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001000{d}1111'
+
+        elif inst == 'PUSH':
+            r = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001001{r}1111'
+
+        elif inst == 'RET':
+            return '1001010100001000'
+
+        elif inst == 'ROL':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'000111{d[0]}{d}{d[1:]}'
+
+        elif inst == 'ROR':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001010{d}0111'
+
+        elif inst == 'SBC':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'000010{r[0]}{d}{r[1:]}'
+
+        elif inst == 'SBI':
+            A = self.make_n_bit_binary(instruction[1], 5)
+            b = self.make_n_bit_binary(instruction[2], 3)
+            return f'10011010{A}{b}'
+
+        elif inst == 'SBR':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            K = self.make_n_bit_binary(instruction[2], 8) # reg number converted to binary
+            return f'0110{K[0:4]}{d[1:]}{K[4:]}'
+
+        elif inst == 'SEC':
+            return '1001010000001000'
+
+        elif inst == 'SEH':
+            return '1001010001011000'
+
+        elif inst == 'SEI':
+            return '1001010001111000'
+
+        elif inst == 'SEN':
+            return '1001010000101000'
+
+        elif inst == 'SER':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'11101111{d[1:]}1111'
+
+        elif inst == 'SES':
+            return '1001010001001000'
+
+        elif inst == 'SET':
+            return '1001010001101000'
+
+        elif inst == 'SEV':
+            return '1001010000111000'
+
+        elif inst == 'SEZ':
+            return '1001010000011000'
+
+        elif inst == 'ST':
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            if instruction[1] == 'X':
+                return f'1001001{r}1100'
+            elif instruction[1] == 'X+':
+                return f'1001001{r}1101'
+            elif instruction[1] == '-X':
+                return f'1001001{r}1110'
+            elif instruction[1] == 'Y':
+                return f'1000001{r}1000'
+            elif instruction[1] == 'Y+':
+                return f'1001001{r}1001'
+            elif instruction[1] == '-Y':
+                return f'1001001{r}1010'
+            elif instruction[1] == 'Z':
+                return f'1000001{r}0000'
+            elif instruction[1] == 'Z+':
+                return f'1001001{r}0001'
+            elif instruction[1] == '-Z':
+                return f'1001001{r}0010'
+
+        elif inst == 'STD':
+            r = self.make_n_bit_binary(instruction[3][1:], 5) # reg number converted to binary
+            q = self.make_n_bit_binary(instruction[2], 6) # reg number converted to binary
+            if instruction[1] == 'Y+':
+                return f'10{q[0]}0{q[1:3]}1{r}1{q[3:]}'
+            elif instruction[1] == 'Z+':
+                return f'10{q[0]}0{q[1:3]}1{r}0{q[3:]}'
+
+        elif inst == 'STS':
+            k = self.make_n_bit_binary(instruction[1], 16) # reg number converted to binary
+            d = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'1001001{d}0000{k}'
+
+        elif inst == 'SUB':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            r = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'000110{r[0]}{d}{r[1:]}'
+
+        elif inst == 'SUBI':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            K = self.make_n_bit_binary(instruction[2], 8) # reg number converted to binary
+            return f'0101{K[0:4]}{d[1:]}{K[4:]}'
+
+        elif inst == 'SWAP':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001010{d}0010'
+
+        elif inst == 'XCH':
+            d = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
+            return f'1001001{d}0100'
+
+
