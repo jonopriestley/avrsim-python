@@ -23,14 +23,18 @@ loop:
 	breq end
 						; > 96 and < 123 is a lowercase letter
 	cpi r18, 97			; 97 = 0x61
-	brlo loop			; Go to next character if this one isnt lower case
+	brlo skip_char			; Go to next character if this one isnt lower case
 	cpi r18, 123		; 123 = 0x61 + 26 (26 letters)
-	brsh loop			; Go to next character if this one isnt lower case
+	brsh skip_char			; Go to next character if this one isnt lower case
 
 	ldi r19, 32			; 0x20
 	sub r18, r19		; Upper = Lower - 32
 	st X+, r18			; Store back into data and increment X
 	
+	jmp loop
+
+skip_char:
+	ld r18, X+
 	jmp loop
 
 print_fnct:				; Prints str string
