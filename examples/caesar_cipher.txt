@@ -1,0 +1,82 @@
+; rotates letters of the alphabet by a set number
+
+.section .data
+msg: .string "Message to encode\n"	; string to encode
+pos: .byte 12						; number of pos. to add to each letter
+
+.section .text
+	.global main
+	
+main:
+	;;; PRINT ORIGINAL MESSAGE ;;;
+	call print_fnct
+	
+	;;; ENCODE ;;;
+	
+	ldi r26, lo8(msg)	; get msg location into X
+	ldi r27, hi8(msg)
+	
+	lds r19, pos
+	ldi r20, 26
+	
+
+loop:
+	; check end condition
+	ld r18, X
+	cpi r18, 0
+	breq end
+	
+	; determine type of letter
+	cpi r18, 65		; less than capital letter
+	brlo do_nothing
+	cpi r18, 91		; capital letter
+	brlo capital	
+	cpi r18, 97		; between capital and lower case
+	brlo do_nothing
+	cpi r18, 123	; lower case
+	brlo lower_case
+	jmp do_nothing
+	
+capital:			; IF CAPITAL LETTER
+	add r18, r19	; r18 += pos
+	cpi r18, 91
+	brlo dont_sub_26
+	jmp sub_26
+
+lower_case:			; IF LOWER CASE LETTER
+	add r18, r19	; r18 += pos
+	cpi r18, 123
+	brlo dont_sub_26
+
+
+sub_26:
+	subi r18, 26
+
+dont_sub_26:
+	st X+, r18		; store back into RAM
+	jmp loop		; goes back to top
+
+do_nothing:
+	st X+, r18		; alters nothing
+	jmp loop		; go back to top
+	
+end:
+	call print_fnct ; print encoded message
+	ret
+	
+print_fnct:	
+	
+	;;; PRINT MESSAGE ;;;
+	ldi r18, hi8(msg)	; get the msg location into stack
+	push r18
+	ldi r18, lo8(msg)	; get the msg location into stack
+	push r18
+	
+	call printf
+	
+	pop r0
+	pop r0
+	
+	ret
+
+.end

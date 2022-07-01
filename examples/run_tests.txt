@@ -30,6 +30,8 @@
 		add r18, r19
 		and r18, r19
 		andi r18, 253
+		asr r18
+		ldi r18, 16
 		bclr 2
 		cpi r20, 1
 

@@ -237,6 +237,7 @@ INST_LIST = [
     'ADD',
     'AND',
     'ANDI',
+    'ASR',
     'BCLR',
     'BRBC',
     'BRBS',
@@ -320,7 +321,7 @@ INST_LIST = [
     'SUBI',
     'SWAP',
     'XCH'
-]
+]   
 
 ######################################
 #  BUILT IN FUNCTIONS

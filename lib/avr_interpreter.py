@@ -108,6 +108,21 @@ class Interpreter:
             self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
             self.sreg.value[6] = int(R == '00000000')
 
+        elif inst == 'ASR':
+            Rd = self.dmem[int(self.current_inst[1][1:])].value
+            R = self.make_8_bit_binary(Rd)
+            C = int(R[7])
+            R = R[0] + R[0:7]
+
+            self.dmem[int(self.current_inst[1][1:])].set_value(int(R, 2))
+            self.update_pc_val(self.get_pc_val() + 1)
+
+            self.sreg.value[5] = int(R[0])
+            self.sreg.value[4] = int(R[0]) ^ C
+            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+            self.sreg.value[6] = int(R == '00000000')
+            self.sreg.value[7] = C
+
         elif inst == 'BCLR':
             s = int(self.current_inst[1])
             self.sreg.value[7 - s] = 0
@@ -240,12 +255,12 @@ class Interpreter:
                 STACK = self.dmem[self.get_SP()] 
                 self.dmem[26].set_value(STACK) # R26 = Xlow = STACK
                 self.increment_SP()
-                Xlow = STACK
+                # Xlow = STACK
 
                 STACK = self.dmem[self.get_SP()]
                 self.dmem[27].set_value(STACK) # R27 = Xhigh = STACK
                 self.increment_SP()
-                Xhigh = STACK
+                # Xhigh = STACK
 
                 ### Print
                 printed_string = ''
@@ -1008,6 +1023,10 @@ class Interpreter:
             d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
             K = self.make_n_bit_binary(instruction[2], 8) # reg number converted to binary
             return f'0111{K[0:4]}{d[1:]}{K[4:]}'
+
+        elif inst == 'ASR':
+            d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
+            return f'1001010{d}0101'
 
         elif inst == 'BCLR':
             s = self.make_n_bit_binary(instruction[1], 3)

@@ -8,12 +8,12 @@ from avr_sim import * # import from avr_sim file in sim
 
 """
 To add a new instruction:
-- Add to INST_LIST (in lexer.py)
-- Add to INST_REQUIREMENTS (in parser_.py)
-- Add its execution info Interpreter.step() method (in interpreter.py)
-"""
+- Add to INST_LIST (in avr_lexer.py)
+- Add to INST_REQUIREMENTS (in avr_parser_.py)
+- Add its execution info interpreter.step() method (in avr_interpreter.py)
+- Add it's binary info to interpreter get_binary_instruction method
+- UDL on Notepadd++ ALREADY has all the instructions
 
-"""
 To add a new directive:
 - Add to DIRECTIVES list
 - Add to Parser.data_label_parse() and Parser.parse() methods
@@ -25,7 +25,7 @@ To add a new directive:
 
 def run(fn, text):
 
-    ########### Tokenizer ###########
+    ########### Lexer ###########
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
     if error:
@@ -43,7 +43,7 @@ def run(fn, text):
 
     instructions = result[0]
     inst_length = len(instructions)
-    for i in range(len(PMEM)):
+    for i in range(len(PMEM)): # PMEM & DMEM imported from avr_reg.py
         if i < len(instructions): PMEM[i] = instructions[i]
         else: PMEM[i] = ['NOP']
 
