@@ -1,7 +1,7 @@
 import sys
 
 path = sys.path
-sim_path = path[0] + '\\lib'
+sim_path = path[0] + '/lib'
 path.insert(1, sim_path)
 
 from avr_sim import * # import from avr_sim file in sim
