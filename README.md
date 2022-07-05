@@ -29,7 +29,7 @@ code editing software). To use it, go to
 then put the file in that folder. It will then
 appear in the drop down list in the Language tab.
 
-### Steps
+### Steps (for AVR.xml with dark mode)
 -	Download Notepad++
 -	Download the AVR.xml file
 -	Go to *Language -> User Defined Language -> Open User Defined Language Folder*, and put AVR.xml in that folder then reboot the app.
