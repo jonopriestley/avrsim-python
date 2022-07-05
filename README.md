@@ -29,6 +29,14 @@ code editing software). To use it, go to
 then put the file in that folder. It will then
 appear in the drop down list in the Language tab.
 
+### Steps
+-	Download Notepad++
+-	Download the AVR.xml file
+-	Go to Language -> User Defined Language -> Open User Defined Language Folder, and put AVR.xml in that folder then reboot the app.
+-	Go to Settings -> Preferences -> Dark Mode and Enable Dark Mode
+-	Go to Settings -> Style Configurator and select the theme "DarkModeDefault" and make the global font Consolas size 12
+-	Use the AVR language package for any AVR files you are writing
+
 ## Donate
 If you like this product and want to support me
 in its updating and refining for you and for future
