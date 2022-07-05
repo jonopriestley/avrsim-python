@@ -1,6 +1,7 @@
 # AVR Simulator
 Simulator for AVR Instruction Set Architecture as taught in ELEC1601 at USyd.
 - Requires Python to run
+- If your Python does not come with Tkinter you will also need to install that
 
 Download the entire repository as is and run
 shell.py with a file passed to it to begin the
