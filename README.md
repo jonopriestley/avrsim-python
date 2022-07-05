@@ -21,7 +21,7 @@ Key Commands:
     <Ctrl+E>     -> reset to beginning
     <Ctrl+C>     -> clear console
 
-## Code Theme
+## Code Theme (won't work on Mac)
 If you wish to use the code theme to make your
 AVR code easier to navigate, I have provided an
 XML file that can be used in Notepad++ (a common
