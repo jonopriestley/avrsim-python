@@ -1241,7 +1241,7 @@ class Interpreter:
         elif inst == 'LDS':
             d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
             k = self.make_n_bit_binary(instruction[2], 16) # reg number converted to binary
-            return f'1001000{d}0000{k}'
+            return [f'1001000{d}0000', k]
         
         elif inst == 'LSL':
             d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
@@ -1387,7 +1387,7 @@ class Interpreter:
         elif inst == 'STS':
             k = self.make_n_bit_binary(instruction[1], 16) # reg number converted to binary
             d = self.make_n_bit_binary(instruction[2][1:], 5) # reg number converted to binary
-            return f'1001001{d}0000{k}'
+            return [f'1001001{d}0000', k]
 
         elif inst == 'SUB':
             d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary

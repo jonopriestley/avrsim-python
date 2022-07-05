@@ -1,8 +1,8 @@
 ; rotates letters of the alphabet by a set number
 
 .section .data
-msg: .string "Message to encode\n"	; string to encode
-pos: .byte 12						; number of pos. to add to each letter
+msg: .string "hello world\n"		; string to encode
+pos: .byte 3						; number of pos. to add to each letter
 
 .section .text
 	.global main
