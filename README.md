@@ -34,8 +34,8 @@ appear in the drop down list in the Language tab.
 -	Download the AVR.xml file
 -	Go to *Language -> User Defined Language -> Open User Defined Language Folder*, and put AVR.xml in that folder then reboot the app.
 -	Go to *Settings -> Preferences -> Dark Mode*, click Enable Dark Mode
--	Go to *Settings -> Style Configurator* and make sure the theme is set to *"DarkModeDefault"*
--	Use the AVR language package for any AVR files you are writing
+
+Use the AVR language package for any AVR files you are writing.
 
 ## Donate
 If you like this product and want to support me
