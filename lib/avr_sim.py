@@ -56,8 +56,16 @@ class App:
         self.num_disp = 'DEC'
         self.ram_disp = 'DEC'
 
-        ########## SREG Update Tracking ##########
+        ########## Update Tracking ##########
         self.last_sreg = [i for i in self.interpreter.sreg.value]
+
+        self.last_XYZ = [self.interpreter.get_XYZ('X'),
+                        self.interpreter.get_XYZ('Y'),
+                        self.interpreter.get_XYZ('Z')]
+
+        self.last_SP = [( self.interpreter.get_SP() % 256 ),
+                        int((self.interpreter.get_SP() - self.interpreter.get_SP()%256) / 256),
+                        hex(self.interpreter.get_SP())]
 
         ########## Window sizes ##########
         self.wh = root.winfo_screenheight()     # window height
@@ -221,9 +229,16 @@ class App:
                 elif len(inst_ls) == 3: inst = f'{i}: {inst_ls[0]} {inst_ls[1]}, {inst_ls[2]}\n'
                 elif inst_ls[0] == 'STD': inst = f'{i}: {inst_ls[0]} {inst_ls[1]}{inst_ls[2]}, {inst_ls[3]}\n'
                 elif inst_ls[0] == 'LDD': inst = f'{i}: {inst_ls[0]} {inst_ls[1]}, {inst_ls[2]}{inst_ls[3]}\n'
-            
-            inst_box.insert(END, inst)
 
+            inst_box.insert(END, inst)
+        
+        if isinstance(self.interpreter.last_pc, int):
+            inst_box.tag_add("Last Line", f'{self.interpreter.last_pc+1}.0', f'{self.interpreter.last_pc+2}.0')
+            inst_box.tag_configure("Last Line", foreground='blue',background=self.text_bg) # colouring the line up to in red
+
+        inst_box.tag_add("Current Line", f'{self.interpreter.get_pc_val()+1}.0', f'{self.interpreter.get_pc_val()+2}.0')
+        inst_box.tag_configure("Current Line", foreground=self.change_colour,background=self.text_bg) # colouring the line up to in red
+        
         inst_scrollbar = Scrollbar(self.root, orient='vertical',command=inst_box.yview)
         inst_scrollbar.place(relx=instx + 0.085,rely=insty,height=inst_height-2, anchor = 'ne')
 
@@ -233,7 +248,6 @@ class App:
         inst_view = (1 + int(self.inst_y_box.get('1.0',END))) / 0x4001
         if inst_view >= 1: inst_view = 0x3FD6/0x4001 # last section of the inst memory
         inst_box.yview_moveto(inst_view)
-
 
         #### RAM
         ramx = 0.705
@@ -319,11 +333,16 @@ class App:
         XYZ_box.config(borderwidth=5,relief='sunken',font=(self.font,20))
         XYZ_box.place(relx=otherx, rely=othery+0.1, anchor = 'n')
 
-        for elem in ['X', 'Y', 'Z']:
+        for i, elem in enumerate(['X', 'Y', 'Z']):
             val = self.convert_val_to_type(self.interpreter.get_XYZ(elem), False)
             XYZ_box.insert(END, f'  {elem}: {val}\n')
+            if val != self.last_XYZ[i]: # dealing with change colouring
+                XYZ_box.tag_add(elem, f'{i+1}.0', f'{i+2}.0')
+                XYZ_box.tag_configure(elem, foreground=self.change_colour,background=self.text_bg)
 
         XYZ_box.config(state=DISABLED)
+
+        self.last_XYZ = [self.interpreter.get_XYZ('X'), self.interpreter.get_XYZ('Y'), self.interpreter.get_XYZ('Z')] # updating last XYZ
         
             # SP BOX
         #SP_box = Frame(self.root,height=round(self.wh/7),width=other_width,bg=self.text_bg,borderwidth=5,relief='sunken')
@@ -345,9 +364,26 @@ class App:
         SP_box.config(borderwidth=5,relief='sunken',font=(self.font,20))
         SP_box.place(relx=otherx, rely=othery+0.24, anchor = 'n')
 
-        SP_box.insert(END, f'  SPL: {self.interpreter.get_SP()%256}\n')
-        SP_box.insert(END, f'  SPH: {int((self.interpreter.get_SP() - self.interpreter.get_SP()%256) / 256)}\n')
-        SP_box.insert(END, f'  SP: {hex(self.interpreter.get_SP())}')
+        val = self.interpreter.get_SP() % 256
+        SP_box.insert(END, f'  SPL: {val}\n')
+        if val != self.last_SP[0]:
+            SP_box.tag_add('SPL', '1.0', '2.0')
+            SP_box.tag_configure('SPL', foreground=self.change_colour,background=self.text_bg)
+        self.last_SP[0] = val
+        
+        val = int((self.interpreter.get_SP() - self.interpreter.get_SP()%256) / 256)
+        SP_box.insert(END, f'  SPH: {val}\n')
+        if val != self.last_SP[1]:
+            SP_box.tag_add('SPH', '2.0', '3.0')
+            SP_box.tag_configure('SPH', foreground=self.change_colour,background=self.text_bg)
+        self.last_SP[1] = val
+
+        val = hex(self.interpreter.get_SP())
+        SP_box.insert(END, f'  SP: {val}')
+        if val != self.last_SP[2]:
+            SP_box.tag_add('SP', '3.0', '4.0')
+            SP_box.tag_configure('SP', foreground=self.change_colour,background=self.text_bg)
+        self.last_SP[2] = val
 
         SP_box.config(state=DISABLED)
 
