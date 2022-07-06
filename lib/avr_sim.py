@@ -38,15 +38,8 @@ class App:
         b = 'black'
         o = 'orange'
         g = 'gray12'
-        self.text_colour = b        # colour of all text in boxes
-        self.text_bg = w            # background of text boxes
-        self.background = o         # background of the screen
-        self.label_colour = b       # colour of the title labels
-        self.label_text = w         # colour of the title text
-        self.button_text = b        # colour of text on buttons
-        self.button_colour = w      # colour of the buttons
+        r = 'red'
 
-        # Testing
         self.text_colour = b        # colour of all text in boxes
         self.text_bg = w            # background of text boxes
         self.background = g         # background of the screen
@@ -54,6 +47,7 @@ class App:
         self.label_text = w         # colour of the title text
         self.button_text = b        # colour of text on buttons
         self.button_colour = o      # colour of the buttons
+        self.change_colour = r      # colour when a value changes from the last operation
 
         self.font = 'Calibri'
 
@@ -61,6 +55,9 @@ class App:
             # Options = 2's comp (+-), dec, hex, bin
         self.num_disp = 'DEC'
         self.ram_disp = 'DEC'
+
+        ########## SREG Update Tracking ##########
+        self.last_sreg = [i for i in self.interpreter.sreg.value]
 
         ########## Window sizes ##########
         self.wh = root.winfo_screenheight()     # window height
@@ -76,11 +73,7 @@ class App:
         self.display()      # display the rest
 
     def display(self):
-        regs = self.interpreter.dmem[0:32]
         sreg = self.interpreter.sreg
-        X = self.interpreter.get_XYZ('X')
-        Y = self.interpreter.get_XYZ('Y')
-        Z = self.interpreter.get_XYZ('Z')
 
         #### Fixing any text boxes
         steps = self.step_box.get('1.0',END)
@@ -127,16 +120,18 @@ class App:
         reg_label = Label(self.root,text='Registers',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
         reg_label.place(relx=regx,rely=regy-0.038, anchor = 'n')
 
-        i = 0
-        while i < 32:
-            reg = regs[i]
+        for i in range(32):
+            reg = self.interpreter.dmem[i]
             val = self.convert_val_to_type(reg.value, False)
             disp = f'R{i}: ' + ('  ' * int(i < 10)) + f'{val}'
-            reg_label = Label(text=disp,font=(self.font,15),bg=self.text_bg,fg=self.text_colour)
+            if reg.changed == 1:
+                reg_label = Label(text=disp,font=(self.font,15),bg=self.text_bg,fg=self.change_colour)
+            else:
+                reg_label = Label(text=disp,font=(self.font,15),bg=self.text_bg,fg=self.text_colour)
             x = regx - 0.11 + ( 0.11 * int(i > 15) )
             y = regy + 0.018 + (i * 0.037) - (0.592 * int(i > 15))
             reg_label.place(relx=x, rely=y)
-            i += 1
+            reg.new_instruct()
 
         #### SREG
         sregx = 0.48
@@ -144,7 +139,34 @@ class App:
         sreg_width = round(self.ww/4)
         sreg_height = round(self.wh/10.2)
 
-        #sreg_box = Frame(self.root,height=sreg_height,width=sreg_width,bg=self.text_bg,borderwidth=5,relief='sunken')
+        sreg_box = Frame(self.root,height=sreg_height,width=sreg_width,bg=self.text_bg,borderwidth=5,relief='sunken')
+        sreg_box.place(relx=sregx,rely=sregy, anchor = 'n')
+
+        sreg_title = Frame(self.root, bg=self.label_colour,height=30,width=reg_width)
+        sreg_title.place(relx=sregx,rely=sregy-0.04, anchor = 'n')
+
+        sreg_label = Label(text='Status Register',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
+        sreg_label.place(relx=sregx,rely=sregy-0.04, anchor = 'n')
+
+        flags = ['I', 'T', 'H', 'S', 'V', 'N', 'Z', 'C']
+        for i in range(8):
+            x = sregx - 1/8 + 0.026*(i+1)
+            y = sregy + 0.01
+            
+            if sreg.value[i] != self.last_sreg[i]:
+                sreg_label = Label(text=flags[i],font=(self.font,20),bg=self.text_bg,fg=self.change_colour)
+                val_label = Label(text=sreg.value[i],font=(self.font,20),bg=self.text_bg,fg=self.change_colour)
+            else:
+                sreg_label = Label(text=flags[i],font=(self.font,20),bg=self.text_bg,fg=self.text_colour)
+                val_label = Label(text=sreg.value[i],font=(self.font,20),bg=self.text_bg,fg=self.text_colour)
+            sreg_label.place(relx=x, rely=y)
+            val_label.place(relx=x, rely=y + 0.035)
+        
+        self.last_sreg = [i for i in sreg.value] # update for next iteration
+
+
+        #sreg_box = Text(self.root,height=2,width=23,bg=self.text_bg,fg=self.text_colour,font=(self.font,20))
+        #sreg_box.config(borderwidth=5,relief='sunken')
         #sreg_box.place(relx=sregx,rely=sregy, anchor = 'n')
 
         #sreg_title = Frame(self.root, bg=self.label_colour,height=30,width=reg_width)
@@ -153,31 +175,10 @@ class App:
         #sreg_label = Label(text='Status Register',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
         #sreg_label.place(relx=sregx,rely=sregy-0.038, anchor = 'n')
 
-        #flags = ['I', 'T', 'H', 'S', 'V', 'N', 'Z', 'C']
-        #vals = sreg.value
-        #for i in range(8):
-        #    x = sregx - 1/8 + 0.026*(i+1)
-        #    y = sregy + 0.01
-        #    sreg_label = Label(text=flags[i],font=(self.font,20),bg=self.text_bg,fg=self.text_colour)
-        #    sreg_label.place(relx=x, rely=y)
-        #    val_label = Label(text=vals[i],font=(self.font,20),bg=self.text_bg,fg=self.text_colour)
-        #    val_label.place(relx=x, rely=y + 0.035)
-
-
-        sreg_box = Text(self.root,height=2,width=23,bg=self.text_bg,fg=self.text_colour,font=(self.font,20))
-        sreg_box.config(borderwidth=5,relief='sunken')
-        sreg_box.place(relx=sregx,rely=sregy, anchor = 'n')
-
-        sreg_title = Frame(self.root, bg=self.label_colour,height=30,width=reg_width)
-        sreg_title.place(relx=sregx,rely=sregy-0.038, anchor = 'n')
-
-        sreg_label = Label(text='Status Register',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
-        sreg_label.place(relx=sregx,rely=sregy-0.038, anchor = 'n')
-
-        sreg_box.insert(END, f'   I    T    H    S    V    N    Z    C\n  ')
-        for val in sreg.value:
-            sreg_box.insert(END, f'{val}    ')
-        sreg_box.config(state=DISABLED)
+        #sreg_box.insert(END, f'   I    T    H    S    V    N    Z    C\n  ')
+        #for val in sreg.value:
+        #    sreg_box.insert(END, f'{val}    ')
+        #sreg_box.config(state=DISABLED)
         
 
         #### Instructions
@@ -287,7 +288,7 @@ class App:
         #PC_val_label = Label(self.root,text=f'PC: {self.interpreter.get_pc_val()}',font=(self.font,30),bg=self.text_bg,fg=self.text_colour)
         #PC_val_label.place(relx=otherx-0.07,rely=othery+0.02, anchor = 'nw')
 
-        PC_box = Text(self.root,height=3,width=15,bg=self.text_bg,fg=self.text_colour)
+        PC_box = Text(self.root,height=2,width=15,bg=self.text_bg,fg=self.text_colour)
         PC_box.config(borderwidth=5,relief='sunken',font=(self.font,20))
         PC_box.place(relx=otherx, rely=othery, anchor = 'n')
 
@@ -297,6 +298,7 @@ class App:
         PC_label = Label(self.root,text='Other',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
         PC_label.place(relx=otherx,rely=othery-0.038, anchor = 'n')
 
+        PC_box.insert(END, f'  Prev. PC: {self.interpreter.last_pc}')
         PC_box.insert(END, f'\n  PC: {self.interpreter.get_pc_val()}')
         PC_box.config(state=DISABLED)
 
@@ -315,7 +317,7 @@ class App:
 
         XYZ_box = Text(self.root,height=3,width=15,bg=self.text_bg,fg=self.text_colour)
         XYZ_box.config(borderwidth=5,relief='sunken',font=(self.font,20))
-        XYZ_box.place(relx=otherx, rely=othery+0.13, anchor = 'n')
+        XYZ_box.place(relx=otherx, rely=othery+0.1, anchor = 'n')
 
         for elem in ['X', 'Y', 'Z']:
             val = self.convert_val_to_type(self.interpreter.get_XYZ(elem), False)
@@ -341,7 +343,7 @@ class App:
         
         SP_box = Text(self.root,height=3,width=15,bg=self.text_bg,fg=self.text_colour)
         SP_box.config(borderwidth=5,relief='sunken',font=(self.font,20))
-        SP_box.place(relx=otherx, rely=othery+0.26, anchor = 'n')
+        SP_box.place(relx=otherx, rely=othery+0.24, anchor = 'n')
 
         SP_box.insert(END, f'  SPL: {self.interpreter.get_SP()%256}\n')
         SP_box.insert(END, f'  SPH: {int((self.interpreter.get_SP() - self.interpreter.get_SP()%256) / 256)}\n')
@@ -384,16 +386,15 @@ class App:
         ########## Console Box ##########
         otherx = 0.89
         othery = 0.05
-        other_width = round(self.ww/6)
 
-        self.console_box = Text(self.root,height=round(self.wh/53),width=round(other_width/8.5),bg=self.text_bg,fg=self.text_colour,borderwidth=5,relief='sunken')
-        self.console_box.place(relx=otherx, rely=othery+0.456, anchor = 'n')
+        self.console_box = Text(self.root,height=19,width=27,bg=self.text_bg,fg=self.text_colour,borderwidth=5,relief='sunken')
+        self.console_box.place(relx=otherx, rely=othery+0.42, anchor = 'n')
 
-        self.console_box_title = Frame(self.root, bg=self.label_colour,height=30,width=other_width)
-        self.console_box_title.place(relx=otherx,rely=othery+0.415, anchor = 'n')
+        self.console_box_title = Frame(self.root, bg=self.label_colour,height=30,width=round(self.ww/6))
+        self.console_box_title.place(relx=otherx,rely=othery+0.38, anchor = 'n')
 
         self.console_box_label = Label(self.root,text='Console',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
-        self.console_box_label.place(relx=otherx,rely=othery+0.415, anchor = 'n')
+        self.console_box_label.place(relx=otherx,rely=othery+0.38, anchor = 'n')
 
     def buttons(self):
         #### Run Buttons ####

@@ -18,6 +18,8 @@ class Interpreter:
         self.pcl = self.dmem[0x5B] # PC low
         self.pch = self.dmem[0x5C] # PC high
 
+        self.last_pc = 'N/A'
+
         self.sreg = self.dmem[0x5F]
         self.sph = self.dmem[0x5E]
         self.spl = self.dmem[0x5D]
@@ -37,6 +39,7 @@ class Interpreter:
             # Executes instruction and updates PC and SREG
             self.current_inst = self.pmem[self.get_pc_val()] # set current instruction
             inst = self.current_inst[0] # set instruction name
+            self.last_pc = self.get_pc_val()
 
         else: self.file_end = True
 

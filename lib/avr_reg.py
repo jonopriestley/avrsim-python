@@ -3,9 +3,10 @@
 ######################################
 
 class Register:
-    def __init__(self, name, value=0):
+    def __init__(self, name, value=0, changed=0):
         self.name = str(name) # eg 3 for R3
         self.value = value
+        self.changed = changed # for displaying as red when the value is updated
 
     def __repr__(self):
         return f'{self.name}: {self.value}'
@@ -13,8 +14,12 @@ class Register:
     def as_string(self):
         return f'{self.name}: {self.value}'
 
+    def new_instruct(self):
+        self.changed = 0
+
     def set_value(self, new_value):
         self.value = new_value % 256
+        self.changed = 1
 
     def get_bits(self): # returns as string
         """
