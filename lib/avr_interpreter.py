@@ -1303,6 +1303,10 @@ class Interpreter:
 
         elif inst == 'RET':
             return '1001010100001000'
+        
+        elif inst == 'RJMP':
+            k = self.make_n_bit_binary(instruction[1], 12)
+            return f'1100{k}'
 
         elif inst == 'ROL':
             d = self.make_n_bit_binary(instruction[1][1:], 5) # reg number converted to binary
