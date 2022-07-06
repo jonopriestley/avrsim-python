@@ -37,10 +37,3 @@ appear in the drop down list in the Language tab.
 
 Use the AVR language package for any AVR files you are writing.
 
-## Donate
-If you like this product and want to support me
-in its updating and refining for you and for future
-users I'd love if you'd consider donating a few dollars.
-Thanks so much for your support!
-
-https://www.paypal.com/donate/?business=8BXF5U6436LQY&no_recurring=1&item_name=Thanks+for+choosing+to+support+me+in+making+this+app.+Your+support+allows+me+to+keep+it+up+to+date+for+future+students%21&currency_code=AUD
