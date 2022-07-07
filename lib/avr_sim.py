@@ -195,6 +195,15 @@ class App:
         inst_width = round(self.ww/6)
         inst_height = round(self.wh/1.3)
 
+        # 
+        p = self.interpreter.get_pc_val()
+        if p < 10:
+            self.inst_y_box.delete('1.0', END)
+            self.inst_y_box.insert(END, '0')
+        else:
+            self.inst_y_box.delete('1.0', END)
+            self.inst_y_box.insert(END, f'{p - 10}')
+
         inst_box = Text(self.root,height=round(inst_height/16.5),width=round(inst_width/8.5),bg=self.text_bg,fg=self.text_colour,borderwidth=5,relief='sunken')
         inst_box.place(relx=instx, rely=insty, anchor = 'n')
 
