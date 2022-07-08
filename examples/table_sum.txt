@@ -9,13 +9,10 @@ total: .byte 0
 	
 main:
 
-	CLR R18
-	STS total, R18		;; total = 0
-
 	LDI R27, hi8(tbl)	;; tbl @ into X reg
 	LDI R26, lo8(tbl)
 
-	CLR R19				;; i = 0 in R19
+	LDS R19, i			;; i = 0 in R19
 	LD R20, X+			;; R20 = length(tbl)
 
 loop:

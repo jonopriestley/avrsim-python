@@ -64,10 +64,9 @@ def run(fn, text):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) < 2:
-        raise ValueError('Must provide a file name to execute.')
+    if len(sys.argv) < 2: fn = input('Name of file to execute: ')
+    else: fn = sys.argv[1]
 
-    fn = sys.argv[1]
     with open(fn, 'r') as f:
         lines = f.read()
         output, error = run(fn, lines)

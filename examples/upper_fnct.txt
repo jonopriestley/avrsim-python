@@ -16,7 +16,6 @@ asm_function:
 	ldi r27, hi8(str)	; load X with str location for the loop
 	ldi r26, lo8(str)
 	
-
 loop:
 	ld r18, X
 	cpi r18, 0
