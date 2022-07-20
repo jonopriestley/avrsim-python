@@ -72,19 +72,23 @@ class App:
                         hex(self.interpreter.get_SP())]
 
         ########## Window sizes ##########
-        self.wh = self.root.winfo_screenheight()     # window height
         self.ww = self.root.winfo_screenwidth()      # window width
+        self.wh = self.root.winfo_screenheight()     # window height
         self.root.geometry(f'{self.ww}x{self.wh}')
         #self.root.attributes('-fullscreen',True)
 
+
         ########## Display ##########
-        Frame(master=self.root, width=self.ww, height=self.wh, bg=self.background).pack()
+        Frame(master=self.root, width=10*self.ww, height=10*self.wh, bg=self.background).place(x=0,y=0)
 
         self.text_boxes()   # initialise input boxes
         self.buttons()      # initialise buttons
         self.display()      # display the rest
 
     def display(self):
+        label_font_size = round(self.wh/60)
+        frame_height = round(self.wh/30)
+
         sreg = self.interpreter.sreg
 
         ############ Fixing any text box issues ############
@@ -123,10 +127,10 @@ class App:
         reg_width = round(self.ww/4.1)
         reg_height = round(self.wh/1.6)
 
-        reg_title = Frame(self.root, bg=self.label_colour,height=30,width=reg_width)
+        reg_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=reg_width)
         reg_title.place(x=regx,y=regy-(0.04*self.wh), anchor = 'n')
 
-        reg_label = Label(self.root,text='Registers',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
+        reg_label = Label(self.root,text='Registers',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
         reg_label.place(x=regx,y=regy-(0.04*self.wh), anchor = 'n')
        
 
@@ -148,9 +152,11 @@ class App:
         #    reg.new_instruct()
 
 
-        reg_box = Text(self.root,height=18,width=29,bg=self.text_bg,fg=self.text_colour,font=(self.font,16))
+        font_size = round(self.wh/65) + 2
+        reg_box = Text(self.root,height=18,width=29,bg=self.text_bg,fg=self.text_colour,font=(self.font,font_size))
         reg_box.config(borderwidth=5,relief='sunken')
         reg_box.place(x=regx,y=regy, anchor = 'n')
+
 
         reg_box.insert(END,'\n')
         for i in range(16):
@@ -186,10 +192,10 @@ class App:
         sreg_width = round(self.ww/4)
         sreg_height = round(self.wh/10.2)
 
-        sreg_title = Frame(self.root, bg=self.label_colour,height=30,width=reg_width)
+        sreg_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=reg_width)
         sreg_title.place(x=sregx,y=sregy-(0.04*self.wh), anchor = 'n')
 
-        sreg_label = Label(text='Status Register',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
+        sreg_label = Label(text='Status Register',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
         sreg_label.place(x=sregx,y=sregy-(0.04*self.wh), anchor = 'n')
         
         #sreg_box = Frame(self.root,height=sreg_height,width=sreg_width,bg=self.text_bg,borderwidth=5,relief='sunken')
@@ -211,8 +217,8 @@ class App:
         #    sreg_label.place(x=x, y=y)
         #    val_label.place(x=x, y=y + 0.035*self.wh)
         
-
-        sreg_box = Text(self.root,height=2,width=23,bg=self.text_bg,fg=self.text_colour,font=(self.font,20))
+        font_size = round(self.wh/80) + 6
+        sreg_box = Text(self.root,font=(self.font,font_size),height=2,width=24,bg=self.text_bg,fg=self.text_colour)
         sreg_box.config(borderwidth=5,relief='sunken')
         sreg_box.place(x=sregx,y=sregy, anchor = 'n')
 
@@ -250,14 +256,19 @@ class App:
             self.inst_y_box.delete('1.0', END)
             self.inst_y_box.insert(END, f'{p - 10}')
 
-        inst_title = Frame(self.root, bg=self.label_colour,height=30,width=inst_width)
+        inst_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=inst_width)
         inst_title.place(x=instx,y=insty-0.04*self.wh, anchor = 'n')
 
-        inst_label = Label(self.root,text='Instructions',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
+        inst_label = Label(self.root,text='Instructions',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
         inst_label.place(x=instx,y=insty-0.04*self.wh, anchor = 'n')
 
-        inst_box = Text(self.root,height=round(inst_height/16.5),width=round(inst_width/8.5),bg=self.text_bg,fg=self.text_colour,borderwidth=5,relief='sunken')
+        font_size = round(self.wh/80)
+        inst_box = Text(self.root,height=40,width=26,bg=self.text_bg,fg=self.text_colour)
+        inst_box.config(font=(self.font,font_size),borderwidth=5,relief='sunken')
         inst_box.place(x=instx, y=insty, anchor = 'n')
+
+        inst_scrollbar = Scrollbar(self.root, orient='vertical',command=inst_box.yview)
+        inst_scrollbar.place(x=instx + 0.085*self.ww,y=insty,height=inst_height-2, anchor = 'ne')
 
         for i in range(self.pmem_length): # inserting into box
             inst_ls = self.interpreter.pmem[i]
@@ -297,9 +308,6 @@ class App:
         if (self.interpreter.last_pc == self.interpreter.get_pc_val()):   # if PC = last PC
             inst_box.tag_configure("Current Line", foreground=self.mix_lastPC_change_colour,background=self.text_bg) # colouring the line up to in red
 
-        inst_scrollbar = Scrollbar(self.root, orient='vertical',command=inst_box.yview)
-        inst_scrollbar.place(x=instx + 0.085*self.ww,y=insty,height=inst_height-2, anchor = 'ne')
-
         inst_box.config(state=DISABLED)
         #inst_box.yview_moveto(inst_box.yview()[1])
 
@@ -312,14 +320,16 @@ class App:
         ramx = 0.705 * self.ww
         ramy = 0.05 * self.wh
 
-        ram_box = Text(self.root,height=round(self.wh/21),width=round(self.ww/50),bg=self.text_bg,fg=self.text_colour,borderwidth=5,relief='sunken')
-        ram_box.place(x=ramx, y=ramy, anchor = 'n')
-
-        ram_title = Frame(self.root, bg=self.label_colour,height=30,width=inst_width)
+        ram_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=inst_width)
         ram_title.place(x=ramx,y=ramy-0.04*self.wh, anchor = 'n')
 
-        ram_label = Label(self.root,text='RAM',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
+        ram_label = Label(self.root,text='RAM',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
         ram_label.place(x=ramx,y=ramy-0.04*self.wh, anchor = 'n')
+
+        font_size = round(self.wh/80)
+        ram_box = Text(self.root,height=40,width=26,bg=self.text_bg,fg=self.text_colour)
+        ram_box.config(font=(self.font,font_size),borderwidth=5,relief='sunken')
+        ram_box.place(x=ramx, y=ramy, anchor = 'n')
 
         for i in range(0x100, self.dmem_length): # inserting into box
             val = self.convert_val_to_type(self.interpreter.dmem[i], True)
@@ -348,13 +358,14 @@ class App:
         otherx = 0.89 * self.ww
         othery = 0.05 * self.wh
         other_width = round(self.ww/6)
+        font_size = round(self.wh/50) + 2
 
             #PC Box
 
         #PC_box = Frame(self.root,height=round(self.wh/10),width=other_width,bg=self.text_bg,borderwidth=5,relief='sunken')
         #PC_box.place(relx=otherx, rely=othery, anchor = 'n')
 
-        #PC_title = Frame(self.root, bg=self.label_colour,height=30,width=other_width)
+        #PC_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=other_width)
         #PC_title.place(relx=otherx,rely=othery-0.038, anchor = 'n')
 
         #PC_label = Label(self.root,text='Other',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
@@ -363,15 +374,15 @@ class App:
         #PC_val_label = Label(self.root,text=f'PC: {self.interpreter.get_pc_val()}',font=(self.font,30),bg=self.text_bg,fg=self.text_colour)
         #PC_val_label.place(relx=otherx-0.07,rely=othery+0.02, anchor = 'nw')
 
+        Other_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=other_width)
+        Other_title.place(x=otherx,y=othery-0.04*self.wh, anchor = 'n')
+
+        Other_label = Label(self.root,text='Other',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
+        Other_label.place(x=otherx,y=othery-0.04*self.wh, anchor = 'n')
+
         PC_box = Text(self.root,height=2,width=15,bg=self.text_bg,fg=self.text_colour)
-        PC_box.config(borderwidth=5,relief='sunken',font=(self.font,20))
+        PC_box.config(borderwidth=5,relief='sunken',font=(self.font,font_size))
         PC_box.place(x=otherx, y=othery, anchor = 'n')
-
-        PC_title = Frame(self.root, bg=self.label_colour,height=30,width=other_width)
-        PC_title.place(x=otherx,y=othery-0.04*self.wh, anchor = 'n')
-
-        PC_label = Label(self.root,text='Other',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
-        PC_label.place(x=otherx,y=othery-0.04*self.wh, anchor = 'n')
 
         PC_box.insert(END, f'  Prev. PC: {self.interpreter.last_pc}')
         PC_box.insert(END, f'\n  PC: {self.interpreter.get_pc_val()}')
@@ -391,7 +402,7 @@ class App:
             #XYZ_val_label.place(relx=otherx-0.075,rely=othery+0.125 + (0.0405 * i), anchor = 'nw')
 
         XYZ_box = Text(self.root,height=3,width=15,bg=self.text_bg,fg=self.text_colour)
-        XYZ_box.config(borderwidth=5,relief='sunken',font=(self.font,20))
+        XYZ_box.config(borderwidth=5,relief='sunken',font=(self.font,font_size))
         XYZ_box.place(x=otherx, y=othery+0.12*self.wh, anchor = 'n')
 
         for i, elem in enumerate(['X', 'Y', 'Z']):
@@ -424,7 +435,7 @@ class App:
         #SP_val_label.place(relx=otherx-0.07,rely=othery+0.36, anchor = 'nw')
         
         SP_box = Text(self.root,height=3,width=15,bg=self.text_bg,fg=self.text_colour)
-        SP_box.config(borderwidth=5,relief='sunken',font=(self.font,20))
+        SP_box.config(borderwidth=5,relief='sunken',font=(self.font,font_size))
         SP_box.place(x=otherx, y=othery+0.28*self.wh, anchor = 'n')
 
         val = self.interpreter.get_SP() % 256
@@ -457,28 +468,30 @@ class App:
         """
 
         x_val = 0.085 * self.ww
+        label_font_size = round(self.wh/60)
+        frame_height = round(self.wh/30)
 
         ########## Step Size ##########
         self.step_box = Text(self.root,height=1,width=10,bg=self.text_bg,fg=self.text_colour,borderwidth=4,relief='sunken',font=(self.font,20))
-        self.step_box.place(x=x_val,y=0.38*self.wh, anchor = 'n')
+        self.step_box.place(x=x_val,y=0.387*self.wh, anchor = 'n')
         self.step_box.insert(END, '1') # initial step size
 
         ########## Inst Y View ##########
-        inst_y_title = Frame(self.root, bg=self.label_colour,height=30,width=150)
-        inst_y_title.place(x=x_val,y=0.46*self.wh, anchor = 'n')
+        inst_y_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=150)
+        inst_y_title.place(x=x_val,y=0.455*self.wh, anchor = 'n')
 
-        inst_y_label = Label(self.root,text='Instructions at:',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
-        inst_y_label.place(x=x_val,y=0.46*self.wh, anchor = 'n')
+        inst_y_label = Label(self.root,text='Instructions at:',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
+        inst_y_label.place(x=x_val,y=0.455*self.wh, anchor = 'n')
 
         self.inst_y_box = Text(self.root,height=1,width=10,bg=self.text_bg,fg=self.text_colour,borderwidth=4,relief='sunken',font=(self.font,20))
         self.inst_y_box.place(x=x_val,y=0.5*self.wh, anchor = 'n')
         self.inst_y_box.insert(END, '0') # initial location
 
         ########## RAM Y View ##########
-        ram_y_title = Frame(self.root, bg=self.label_colour,height=30,width=150)
+        ram_y_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=150)
         ram_y_title.place(x=x_val,y=0.56*self.wh, anchor = 'n')
 
-        ram_y_label = Label(self.root,text='RAM at:',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
+        ram_y_label = Label(self.root,text='RAM at:',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
         ram_y_label.place(x=x_val,y=0.56*self.wh, anchor = 'n')
 
         self.ram_y_box = Text(self.root,height=1,width=10,bg=self.text_bg,fg=self.text_colour,borderwidth=4,relief='sunken',font=(self.font,20))
@@ -488,14 +501,16 @@ class App:
         ########## Console Box ##########
         otherx = 0.89 * self.ww
         othery = 0.05 * self.wh
+        font_size = round(self.wh/85)
 
-        console_box_title = Frame(self.root, bg=self.label_colour,height=30,width=round(self.ww/6))
+        console_box_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=round(self.ww/6))
         console_box_title.place(x=otherx,y=othery+0.44*self.wh, anchor = 'n')
 
-        console_box_label = Label(self.root,text='Console',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
+        console_box_label = Label(self.root,text='Console',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
         console_box_label.place(x=otherx,y=othery+0.44*self.wh, anchor = 'n')
 
-        self.console_box = Text(self.root,height=16,width=27,bg=self.text_bg,fg=self.text_colour,borderwidth=5,relief='sunken')
+        self.console_box = Text(self.root,font=(self.font,font_size),height=16,width=27,bg=self.text_bg,fg=self.text_colour)
+        self.console_box.config(borderwidth=5,relief='sunken')
         self.console_box.place(x=otherx, y=othery+0.48*self.wh, anchor = 'n')
 
     def buttons(self):
@@ -524,39 +539,41 @@ class App:
         #quit_button.place(x=x_val,y=0.87*self.wh, anchor = 'n')
 
         #### Display Buttons ####
-        disp_title = Frame(self.root, bg=self.label_colour,height=30,width=150)
+        font_size = round(self.wh/60)
+
+        disp_title = Frame(self.root, bg=self.label_colour,height=round(self.wh/30),width=150)
         disp_title.place(x=x_val,y=0.66*self.wh, anchor = 'n')
 
-        disp_label = Label(self.root,text='Display Type',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
+        disp_label = Label(self.root,text='Display Type',font=(self.font,font_size),bg=self.label_colour,fg=self.label_text)
         disp_label.place(x=x_val,y=0.66*self.wh, anchor = 'n')
 
-        tcomp_button = Button(self.root,text='2\'s Comp',font=(self.font,14))
+        tcomp_button = Button(self.root,text='2\'s Comp',font=(self.font,font_size))
         tcomp_button.config(bg=self.button_colour,fg=self.button_text,height=1,width=8)
         tcomp_button.config(command=self.update_to_tcomp_type)
         tcomp_button.place(x=0.063*self.ww,y=0.71*self.wh, anchor = 'n')
 
-        dec_button = Button(self.root,text='Dec',font=(self.font,14))
+        dec_button = Button(self.root,text='Dec',font=(self.font,font_size))
         dec_button.config(bg=self.button_colour,fg=self.button_text,height=1,width=4)
         dec_button.config(command=self.update_to_dec_type)
         dec_button.place(x=0.121*self.ww,y=0.71*self.wh, anchor = 'n')
 
-        hex_button = Button(self.root,text='Hex',font=(self.font,14))
+        hex_button = Button(self.root,text='Hex',font=(self.font,font_size))
         hex_button.config(bg=self.button_colour,fg=self.button_text,height=1,width=3)
         hex_button.config(command=self.update_to_hex_type)
         hex_button.place(x=0.045*self.ww,y=0.77*self.wh, anchor = 'n')
 
-        bin_button = Button(self.root,text='Bin',font=(self.font,14))
+        bin_button = Button(self.root,text='Bin',font=(self.font,font_size))
         bin_button.config(bg=self.button_colour,fg=self.button_text,height=1,width=3)
         bin_button.config(command=self.update_to_bin_type)
         bin_button.place(x=0.081*self.ww,y=0.77*self.wh, anchor = 'n')
 
-        text_button = Button(self.root,text='Text',font=(self.font,14))
+        text_button = Button(self.root,text='Text',font=(self.font,font_size))
         text_button.config(bg=self.button_colour,fg=self.button_text,height=1,width=4)
         text_button.config(command=self.update_to_text_type)
         text_button.place(x=0.121*self.ww,y=0.77*self.wh, anchor = 'n')
 
         #### Clear Console Button ####
-        clear_console_button = Button(self.root,text='Clear Console',font=(self.font,15))
+        clear_console_button = Button(self.root,text='Clear Console',font=(self.font,font_size))
         clear_console_button.config(bg=self.button_colour,fg=self.button_text,height=1,width=14)
         clear_console_button.config(command=self.clear_console)
         clear_console_button.place(x=x_val,y=0.85*self.wh, anchor = 'n')
