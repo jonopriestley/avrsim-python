@@ -39,6 +39,8 @@ class App:
         o = 'orange'
         g = 'gray12'
         r = 'red'
+        bl = 'blue'
+        v = 'blue violet'
 
         self.text_colour = b        # colour of all text in boxes
         self.text_bg = w            # background of text boxes
@@ -48,6 +50,8 @@ class App:
         self.button_text = b        # colour of text on buttons
         self.button_colour = o      # colour of the buttons
         self.change_colour = r      # colour when a value changes from the last operation
+        self.last_PC_colour = bl
+        self.mix_lastPC_change_colour = v
 
         self.font = 'Calibri'
 
@@ -83,7 +87,7 @@ class App:
     def display(self):
         sreg = self.interpreter.sreg
 
-        #### Fixing any text boxes
+        ############ Fixing any text box issues ############
         steps = self.step_box.get('1.0',END)
         for elem in steps:
             if elem not in DIGITS:
@@ -113,20 +117,20 @@ class App:
                     self.ram_y_box.insert(END, ram_at)
                     break
         
-        #### Registers
+        ############ Registers ############
         regx = 0.48
         regy = 0.05
         reg_width = round(self.ww/4)
         reg_height = round(self.wh/1.6)
-
-        reg_box = Frame(self.root,height=reg_height,width=reg_width,bg=self.text_bg,borderwidth=5,relief='sunken')
-        reg_box.place(relx=regx,rely=regy, anchor = 'n')
 
         reg_title = Frame(self.root, bg=self.label_colour,height=30,width=reg_width)
         reg_title.place(relx=regx,rely=regy-0.038, anchor = 'n')
 
         reg_label = Label(self.root,text='Registers',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
         reg_label.place(relx=regx,rely=regy-0.038, anchor = 'n')
+        
+        reg_box = Frame(self.root,height=reg_height,width=reg_width,bg=self.text_bg,borderwidth=5,relief='sunken')
+        reg_box.place(relx=regx,rely=regy, anchor = 'n')
 
         for i in range(32):
             reg = self.interpreter.dmem[i]
@@ -141,7 +145,7 @@ class App:
             reg_label.place(relx=x, rely=y)
             reg.new_instruct()
 
-        #### SREG
+        ############ SREG ############
         sregx = 0.48
         sregy = 0.73
         sreg_width = round(self.ww/4)
@@ -164,9 +168,11 @@ class App:
             if sreg.value[i] != self.last_sreg[i]:
                 sreg_label = Label(text=flags[i],font=(self.font,20),bg=self.text_bg,fg=self.change_colour)
                 val_label = Label(text=sreg.value[i],font=(self.font,20),bg=self.text_bg,fg=self.change_colour)
+            
             else:
                 sreg_label = Label(text=flags[i],font=(self.font,20),bg=self.text_bg,fg=self.text_colour)
                 val_label = Label(text=sreg.value[i],font=(self.font,20),bg=self.text_bg,fg=self.text_colour)
+            
             sreg_label.place(relx=x, rely=y)
             val_label.place(relx=x, rely=y + 0.035)
         
@@ -189,14 +195,14 @@ class App:
         #sreg_box.config(state=DISABLED)
         
 
-        #### Instructions
+        ############ Instructions ############
         instx = 0.255
         insty = 0.05
         inst_width = round(self.ww/6)
         inst_height = round(self.wh/1.3)
 
-        # 
-        p = self.interpreter.get_pc_val()
+        
+        p = self.interpreter.get_pc_val() # for putting into the instruction location box where the instruction is at
         if p < 10:
             self.inst_y_box.delete('1.0', END)
             self.inst_y_box.insert(END, '0')
@@ -243,11 +249,14 @@ class App:
         
         if isinstance(self.interpreter.last_pc, int):
             inst_box.tag_add("Last Line", f'{self.interpreter.last_pc+1}.0', f'{self.interpreter.last_pc+2}.0')
-            inst_box.tag_configure("Last Line", foreground='blue',background=self.text_bg) # colouring the line up to in red
+            inst_box.tag_configure("Last Line", foreground=self.last_PC_colour,background=self.text_bg) # colouring the line up to in red
 
         inst_box.tag_add("Current Line", f'{self.interpreter.get_pc_val()+1}.0', f'{self.interpreter.get_pc_val()+2}.0')
         inst_box.tag_configure("Current Line", foreground=self.change_colour,background=self.text_bg) # colouring the line up to in red
         
+        if (self.interpreter.last_pc == self.interpreter.get_pc_val()):   # if PC = last PC
+            inst_box.tag_configure("Current Line", foreground=self.mix_lastPC_change_colour,background=self.text_bg) # colouring the line up to in red
+
         inst_scrollbar = Scrollbar(self.root, orient='vertical',command=inst_box.yview)
         inst_scrollbar.place(relx=instx + 0.085,rely=insty,height=inst_height-2, anchor = 'ne')
 
@@ -258,7 +267,8 @@ class App:
         if inst_view >= 1: inst_view = 0x3FD6/0x4001 # last section of the inst memory
         inst_box.yview_moveto(inst_view)
 
-        #### RAM
+
+        ############ RAM ############
         ramx = 0.705
         ramy = 0.05
 
@@ -270,7 +280,6 @@ class App:
 
         ram_label = Label(self.root,text='RAM',font=(self.font,15),bg=self.label_colour,fg=self.label_text)
         ram_label.place(relx=ramx,rely=ramy-0.038, anchor = 'n')
-
 
         for i in range(0x100, self.dmem_length): # inserting into box
             val = self.convert_val_to_type(self.interpreter.dmem[i], True)
@@ -284,11 +293,14 @@ class App:
         #ram_box.yview_moveto(ram_box.yview()[1])
 
         ram_view_val = self.ram_y_box.get('1.0',END)
+
         # Converting to values 
         if 'x' in ram_view_val.lower(): ram_view = int(self.ram_y_box.get('1.0',END), 16)
         else: ram_view = int(self.ram_y_box.get('1.0',END))
+
         if ram_view < 0x100: ram_view = 0x100
         elif ram_view > 0x8FF: ram_view = 0x8D5
+
         ram_view = (ram_view - 0xFF)/0x801
         ram_box.yview_moveto(ram_view)
 
