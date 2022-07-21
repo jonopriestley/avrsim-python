@@ -268,7 +268,7 @@ class App:
         inst_box.place(x=instx, y=insty, anchor = 'n')
 
         inst_scrollbar = Scrollbar(self.root, orient='vertical',command=inst_box.yview)
-        inst_scrollbar.place(x=instx + 0.085*self.ww,y=insty,height=inst_height-2, anchor = 'ne')
+        inst_scrollbar.place(x=instx + 0.082*self.ww,y=insty,height=inst_height-2, anchor = 'ne')
 
         for i in range(self.pmem_length): # inserting into box
             inst_ls = self.interpreter.pmem[i]
@@ -337,7 +337,7 @@ class App:
             ram_box.insert(END, val)
 
         ram_scrollbar = Scrollbar(self.root, orient='vertical',command=ram_box.yview)
-        ram_scrollbar.place(x=ramx + 0.085*self.ww,y=ramy,height=inst_height-2, anchor = 'ne')
+        ram_scrollbar.place(x=ramx + 0.082*self.ww,y=ramy,height=inst_height-2, anchor = 'ne')
 
         ram_box.config(state=DISABLED)
         #ram_box.yview_moveto(ram_box.yview()[1])
