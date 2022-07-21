@@ -63,17 +63,15 @@ class App:
         ########## Update Tracking ##########
         self.last_sreg = [i for i in self.interpreter.sreg.value]
 
-        self.last_XYZ = [str(self.interpreter.get_XYZ('X')),
-                        str(self.interpreter.get_XYZ('Y')),
-                        str(self.interpreter.get_XYZ('Z'))]
-
         self.last_SP = [( self.interpreter.get_SP() % 256 ),
                         int((self.interpreter.get_SP() - self.interpreter.get_SP()%256) / 256),
                         hex(self.interpreter.get_SP())]
 
         ########## Window sizes ##########
-        self.ww = self.root.winfo_screenwidth()      # window width
-        self.wh = self.root.winfo_screenheight()     # window height
+        #self.ww = self.root.winfo_screenwidth()      # window width
+        #self.wh = self.root.winfo_screenheight()     # window height
+        self.ww = 1200
+        self.wh = 750
         self.root.geometry(f'{self.ww}x{self.wh}')
         #self.root.attributes('-fullscreen',True)
 
@@ -152,7 +150,7 @@ class App:
         #    reg.new_instruct()
 
 
-        font_size = round(self.wh/65) + 2
+        font_size = round(self.wh/65) + 1
         reg_box = Text(self.root,height=18,width=29,bg=self.text_bg,fg=self.text_colour,font=(self.font,font_size))
         reg_box.config(borderwidth=5,relief='sunken')
         reg_box.place(x=regx,y=regy, anchor = 'n')
@@ -175,20 +173,16 @@ class App:
                 reg_box.tag_add(str(i), f'{i+2}.0', f'{i+2}.{len(line_a)}')
                 reg_box.tag_configure(str(i), foreground=self.change_colour)
             
-            self.interpreter.dmem[i].new_instruct()
-
             if self.interpreter.dmem[i+16].changed == 1:
                 reg_box.tag_add(str(i+16), f'{i+2}.{len(line_a)}', f'{i+2}.{len(line_a + line_b)}')
                 reg_box.tag_configure(str(i+16), foreground=self.change_colour)
-            
-            self.interpreter.dmem[i+16].new_instruct()
 
         reg_box.config(state=DISABLED)
         
 
         ############ SREG ############
         sregx = 0.48 * self.ww
-        sregy = 0.73 * self.wh
+        sregy = 0.83 * self.wh
         sreg_width = round(self.ww/4)
         sreg_height = round(self.wh/10.2)
 
@@ -217,19 +211,18 @@ class App:
         #    sreg_label.place(x=x, y=y)
         #    val_label.place(x=x, y=y + 0.035*self.wh)
         
-        font_size = round(self.wh/80) + 6
+        font_size = round(self.wh/65) + 4
         sreg_box = Text(self.root,font=(self.font,font_size),height=2,width=24,bg=self.text_bg,fg=self.text_colour)
         sreg_box.config(borderwidth=5,relief='sunken')
         sreg_box.place(x=sregx,y=sregy, anchor = 'n')
 
         flags = ['I', 'T', 'H', 'S', 'V', 'N', 'Z', 'C']
 
-        sreg_box.insert(END, f'     I    T    H    S    V    N    Z    C\n')
+        sreg_box.insert(END, f'    I    T    H    S    V    N    Z    C\n')
         for i in range(8):
             sreg_box.insert(END, f'    {sreg.value[i]}')
-
             if sreg.value[i] != self.last_sreg[i]:
-                sreg_box.tag_add(flags[i], f'1.{5*i + 5}', f'1.{5*i + 6}')
+                sreg_box.tag_add(flags[i], f'1.{5*i + 4}', f'1.{5*i + 5}')
                 sreg_box.tag_configure(flags[i], foreground=self.change_colour)
 
                 sreg_box.tag_add(f'{flags[i]}_val', f'2.{5*i + 4}', f'2.{5*i + 5}')
@@ -262,7 +255,7 @@ class App:
         inst_label = Label(self.root,text='Instructions',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
         inst_label.place(x=instx,y=insty-0.04*self.wh, anchor = 'n')
 
-        font_size = round(self.wh/80)
+        font_size = round(self.wh/100) + 2
         inst_box = Text(self.root,height=40,width=26,bg=self.text_bg,fg=self.text_colour)
         inst_box.config(font=(self.font,font_size),borderwidth=5,relief='sunken')
         inst_box.place(x=instx, y=insty, anchor = 'n')
@@ -326,7 +319,7 @@ class App:
         ram_label = Label(self.root,text='RAM',font=(self.font,label_font_size),bg=self.label_colour,fg=self.label_text)
         ram_label.place(x=ramx,y=ramy-0.04*self.wh, anchor = 'n')
 
-        font_size = round(self.wh/80)
+        font_size = round(self.wh/100) + 2
         ram_box = Text(self.root,height=40,width=26,bg=self.text_bg,fg=self.text_colour)
         ram_box.config(font=(self.font,font_size),borderwidth=5,relief='sunken')
         ram_box.place(x=ramx, y=ramy, anchor = 'n')
@@ -408,15 +401,13 @@ class App:
         for i, elem in enumerate(['X', 'Y', 'Z']):
             val = self.convert_val_to_type(self.interpreter.get_XYZ(elem), False)
             XYZ_box.insert(END, f'  {elem}: {val}\n')
-            if val != self.last_XYZ[i]: # dealing with change colouring
+            if self.interpreter.dmem[26 + 2*i].changed or self.interpreter.dmem[27 + 2*i].changed: # dealing with change colouring
                 XYZ_box.tag_add(elem, f'{i+1}.0', f'{i+2}.0')
                 XYZ_box.tag_configure(elem, foreground=self.change_colour,background=self.text_bg)
 
         XYZ_box.config(state=DISABLED)
 
-        self.last_XYZ = [str(self.interpreter.get_XYZ('X')),
-                        str(self.interpreter.get_XYZ('Y')),
-                        str(self.interpreter.get_XYZ('Z'))] # updating last XYZ
+
 
             # SP BOX
         #SP_box = Frame(self.root,height=round(self.wh/7),width=other_width,bg=self.text_bg,borderwidth=5,relief='sunken')
@@ -443,21 +434,18 @@ class App:
         if val != self.last_SP[0]:
             SP_box.tag_add('SPL', '1.0', '2.0')
             SP_box.tag_configure('SPL', foreground=self.change_colour,background=self.text_bg)
-        self.last_SP[0] = val
         
         val = int((self.interpreter.get_SP() - self.interpreter.get_SP()%256) / 256)
         SP_box.insert(END, f'  SPH: {val}\n')
         if val != self.last_SP[1]:
             SP_box.tag_add('SPH', '2.0', '3.0')
             SP_box.tag_configure('SPH', foreground=self.change_colour,background=self.text_bg)
-        self.last_SP[1] = val
 
         val = hex(self.interpreter.get_SP())
         SP_box.insert(END, f'  SP: {val}')
         if val != self.last_SP[2]:
             SP_box.tag_add('SP', '3.0', '4.0')
             SP_box.tag_configure('SP', foreground=self.change_colour,background=self.text_bg)
-        self.last_SP[2] = val
 
         SP_box.config(state=DISABLED)
 
@@ -501,7 +489,7 @@ class App:
         ########## Console Box ##########
         otherx = 0.89 * self.ww
         othery = 0.05 * self.wh
-        font_size = round(self.wh/85)
+        font_size = round(self.wh/80)
 
         console_box_title = Frame(self.root, bg=self.label_colour,height=frame_height,width=round(self.ww/6))
         console_box_title.place(x=otherx,y=othery+0.44*self.wh, anchor = 'n')
@@ -582,6 +570,11 @@ class App:
         """
         Runs the whole code
         """
+        for i in range(32): # refresh the 'changed' variable
+            self.interpreter.dmem[i].new_instruct()
+
+        self.update_last_SP()
+
         while self.interpreter.file_end == False:
             output = self.interpreter.step()
             if isinstance(output, str):
@@ -596,6 +589,11 @@ class App:
         self.display()
 
     def step(self):
+        for i in range(32): # refresh the 'changed' variable
+            self.interpreter.dmem[i].new_instruct()
+
+        self.update_last_SP()
+
         step_size = self.step_box.get('1.0',END)
         try: step_size = int(step_size)
         except: step_size = 1
@@ -608,7 +606,7 @@ class App:
                 self.console_box.insert(END, output)
                 self.console_box.yview_moveto(1)
                 break
-        
+            
         self.display()
 
     def reset(self):
@@ -616,6 +614,11 @@ class App:
         Resets the to be beginning so
         the file can be run again.
         """
+
+        for i in range(32): # refresh the 'changed' variable
+            self.interpreter.dmem[i].new_instruct()
+
+        self.last_SP = [0, 0, '0x0'] # resetting expected SP variables
 
         self.data = copy.deepcopy(self.data_copy)
         self.interpreter = Interpreter(self.data[0], self.data[1], self.data[2], self.data[3])
@@ -644,6 +647,11 @@ class App:
             self.ram_disp = type_
         
         self.display()
+
+    def update_last_SP(self):
+        self.last_SP[0] = self.interpreter.get_SP() % 256
+        self.last_SP[1] = int((self.interpreter.get_SP() - self.interpreter.get_SP()%256) / 256)
+        self.last_SP[2] = hex(self.interpreter.get_SP())
 
     def clear_console(self):
         self.console_box.delete('1.0', END)
