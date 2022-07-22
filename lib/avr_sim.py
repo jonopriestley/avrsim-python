@@ -68,10 +68,10 @@ class App:
                         hex(self.interpreter.get_SP())]
 
         ########## Window sizes ##########
-        #self.ww = self.root.winfo_screenwidth()      # window width
-        #self.wh = self.root.winfo_screenheight()     # window height
-        self.ww = 1200
-        self.wh = 750
+        self.ww = self.root.winfo_screenwidth()      # window width
+        self.wh = round(0.92*self.root.winfo_screenheight())     # window height
+        #self.ww = 1200
+        #self.wh = 750
         self.root.geometry(f'{self.ww}x{self.wh}')
         #self.root.attributes('-fullscreen',True)
 
@@ -150,7 +150,7 @@ class App:
         #    reg.new_instruct()
 
 
-        font_size = round(self.wh/65) + 1
+        font_size = round(self.wh/65) + 2
         reg_box = Text(self.root,height=18,width=29,bg=self.text_bg,fg=self.text_colour,font=(self.font,font_size))
         reg_box.config(borderwidth=5,relief='sunken')
         reg_box.place(x=regx,y=regy, anchor = 'n')
@@ -182,7 +182,7 @@ class App:
 
         ############ SREG ############
         sregx = 0.48 * self.ww
-        sregy = 0.83 * self.wh
+        sregy = 0.78 * self.wh
         sreg_width = round(self.ww/4)
         sreg_height = round(self.wh/10.2)
 
@@ -218,14 +218,14 @@ class App:
 
         flags = ['I', 'T', 'H', 'S', 'V', 'N', 'Z', 'C']
 
-        sreg_box.insert(END, f'    I    T    H    S    V    N    Z    C\n')
-        for i in range(8):
+        sreg_box.insert(END, f'   I    T    H    S    V    N    Z    C\n   {sreg.value[0]}')
+        for i in range(1,8):
             sreg_box.insert(END, f'    {sreg.value[i]}')
             if sreg.value[i] != self.last_sreg[i]:
-                sreg_box.tag_add(flags[i], f'1.{5*i + 4}', f'1.{5*i + 5}')
+                sreg_box.tag_add(flags[i], f'1.{5*i + 3}', f'1.{5*i + 4}')
                 sreg_box.tag_configure(flags[i], foreground=self.change_colour)
 
-                sreg_box.tag_add(f'{flags[i]}_val', f'2.{5*i + 4}', f'2.{5*i + 5}')
+                sreg_box.tag_add(f'{flags[i]}_val', f'2.{5*i + 3}', f'2.{5*i + 4}')
                 sreg_box.tag_configure(f'{flags[i]}_val', foreground=self.change_colour)
 
         sreg_box.config(state=DISABLED)
@@ -238,7 +238,7 @@ class App:
         instx = 0.255 * self.ww
         insty = 0.05 * self.wh
         inst_width = round(self.ww/6)
-        inst_height = round(self.wh/1.3)
+        inst_height = round(self.wh/1.4)
 
         
         p = self.interpreter.get_pc_val() # for putting into the instruction location box where the instruction is at
@@ -256,12 +256,12 @@ class App:
         inst_label.place(x=instx,y=insty-0.04*self.wh, anchor = 'n')
 
         font_size = round(self.wh/100) + 2
-        inst_box = Text(self.root,height=40,width=26,bg=self.text_bg,fg=self.text_colour)
+        inst_box = Text(self.root,height=50-font_size,width=26,bg=self.text_bg,fg=self.text_colour)
         inst_box.config(font=(self.font,font_size),borderwidth=5,relief='sunken')
         inst_box.place(x=instx, y=insty, anchor = 'n')
 
         inst_scrollbar = Scrollbar(self.root, orient='vertical',command=inst_box.yview)
-        inst_scrollbar.place(x=instx + 0.082*self.ww,y=insty,height=inst_height-2, anchor = 'ne')
+        inst_scrollbar.place(x=instx + 0.082*self.ww,y=insty,height=inst_height, anchor = 'ne')
 
         for i in range(self.pmem_length): # inserting into box
             inst_ls = self.interpreter.pmem[i]
@@ -320,7 +320,7 @@ class App:
         ram_label.place(x=ramx,y=ramy-0.04*self.wh, anchor = 'n')
 
         font_size = round(self.wh/100) + 2
-        ram_box = Text(self.root,height=40,width=26,bg=self.text_bg,fg=self.text_colour)
+        ram_box = Text(self.root,height=50-font_size,width=26,bg=self.text_bg,fg=self.text_colour)
         ram_box.config(font=(self.font,font_size),borderwidth=5,relief='sunken')
         ram_box.place(x=ramx, y=ramy, anchor = 'n')
 
@@ -330,7 +330,7 @@ class App:
             ram_box.insert(END, val)
 
         ram_scrollbar = Scrollbar(self.root, orient='vertical',command=ram_box.yview)
-        ram_scrollbar.place(x=ramx + 0.082*self.ww,y=ramy,height=inst_height-2, anchor = 'ne')
+        ram_scrollbar.place(x=ramx + 0.082*self.ww,y=ramy,height=inst_height, anchor = 'ne')
 
         ram_box.config(state=DISABLED)
         #ram_box.yview_moveto(ram_box.yview()[1])
