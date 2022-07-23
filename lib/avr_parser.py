@@ -126,15 +126,16 @@ class Parser:
             pos_start = self.pos.copy()
             if (self.tok.type == TT_LABEL) and (len(self.line) > 1): # if there is an instruction in the line
                 self.advance()
+            
             if self.tok.type == TT_INST:
-                if self.tok.value in DOUBLE_LENGTH_INSTRUCTIONS: long_inst = True
-                else: long_inst = False
+                
                 result = self.inst_parse(pc)
+                
                 if result != None: return [], result
-                if long_inst:
-                    self.instructions.append(None)
-                    pc += 1
+                
+                if self.instructions[-1] == None: pc += 1
                 pc += 1
+
             elif self.tok.type == TT_LABEL:
                 if len(self.line) > 1:
                     pos_start.ln = self.line_nums[pos_start.ln]
@@ -167,6 +168,11 @@ class Parser:
         return [self.instructions, self.data], None
 
     def inst_parse(self, pc):
+        """
+        Takes a line of code, parses
+        all the tokens, and confirms they
+        are valid.
+        """
 
         pos_start = self.pos.copy()
         inst = self.tok.value
@@ -175,12 +181,14 @@ class Parser:
         idx = 0
         inst_info = [inst]
         self.advance()
-        while (self.tok != None) and (reqs[0] != None):
-            if idx >= req_len:
+        while (self.tok != None):
+
+            if idx >= req_len: # if instruction has too many arguments
                 pos_start.ln = self.line_nums[pos_start.ln]
                 return InvalidInstructionError(pos_start, self.pos, "Too many arguments given")
-            req = reqs[idx] # requirement
-            if isinstance(req, list):
+            
+            req = reqs[idx] # requirement up to
+            if isinstance(req, list): # if requirement has options
                 if self.tok.type not in req: 
                     if self.tok.value != None:
                         pos_start.ln = self.line_nums[pos_start.ln]
@@ -193,50 +201,53 @@ class Parser:
                     return InvalidInstructionError(pos_start, self.pos, "Incorrect argument \'" + str(self.tok.value) + "\'")
                 pos_start.ln = self.line_nums[pos_start.ln]
                 return InvalidInstructionError(pos_start, self.pos, "Incorrect argument \'" + str(self.tok.type) + "\'")
-
-            if self.tok.type != TT_COMMA: # add to instruction info if its not a comma
-                if (self.tok.type == TT_STRING):
-                    if (self.tok.value in self.label_locations):
-                        if inst[:2].upper() in ['RC', 'RJ', 'BR']: 
-                            k = self.label_locations[self.tok.value] - pc - 1
-                            if inst[:2].upper == 'RC' and ( (k < -64) or (k > 63) ):
-                                pos_start.ln = self.line_nums[pos_start.ln]
-                                return InvalidInstructionError(pos_start, self.pos, "Label too far away to access from \'" + self.tok.value + "\'")
-                            elif ( (k < -2048) or (k > 2047) ):
-                                pos_start.ln = self.line_nums[pos_start.ln]
-                                return InvalidInstructionError(pos_start, self.pos, "Label too far away to access from \'" + self.tok.value + "\'")
-                            inst_info.append(k)
-                        else: inst_info.append(self.label_locations[self.tok.value])
-
-                    elif (self.tok.value in self.data_locations):
-                        k = self.data_locations[self.tok.value]
-                        if ( (k < 0) or (k > 65535) ):
+            
+            if (self.tok.type == TT_STRING): # if it's a label or data value
+                
+                if (self.tok.value in self.label_locations): # for labels
+                    if inst[:2].upper() in ['RC', 'RJ', 'BR']: # if branch, rcall or rjump (has a set range of jumping)
+                        k = self.label_locations[self.tok.value] - pc - 1
+                        if inst[:2].upper == 'RC' and ( (k < -64) or (k > 63) ):
                             pos_start.ln = self.line_nums[pos_start.ln]
-                            return InvalidInstructionError(pos_start, self.pos, "\'" + self.tok.value + "\'")
+                            return InvalidInstructionError(pos_start, self.pos, "Label too far away to access from \'" + self.tok.value + "\'")
+                        elif ( (k < -2048) or (k > 2047) ):
+                            pos_start.ln = self.line_nums[pos_start.ln]
+                            return InvalidInstructionError(pos_start, self.pos, "Label too far away to access from \'" + self.tok.value + "\'")
                         inst_info.append(k)
+                    else: inst_info.append(self.label_locations[self.tok.value])
 
+                elif (self.tok.value in self.data_locations): # for variables
+                    k = self.data_locations[self.tok.value]
+                    if ( (k < 0) or (k > 65535) ):
+                        pos_start.ln = self.line_nums[pos_start.ln]
+                        return InvalidInstructionError(pos_start, self.pos, "\'" + self.tok.value + "\'")
+                    inst_info.append(k)
                 
-                elif (self.tok.type in [TT_HI8, TT_LO8]):
-                    loc = self.data_locations[self.tok.value]
-                    if (self.tok.type == TT_HI8): inst_info.append(int((loc - (loc % 256)) / 256))
-                    else: inst_info.append(loc % 256)
+            elif (self.tok.type in [TT_HI8, TT_LO8]):
+                loc = self.data_locations[self.tok.value]
+                if (self.tok.type == TT_HI8): inst_info.append(int((loc - (loc % 256)) / 256))
+                else: inst_info.append(loc % 256)
                 
-                elif (self.tok.value != None):
-                    inst_info.append(self.tok.value)
+            elif (self.tok.value != None):
+                inst_info.append(self.tok.value)
                 
-                else: inst_info.append(self.tok.type)
-
+            elif (self.tok.type != TT_COMMA): inst_info.append(self.tok.type) # don't add commas
             
             self.advance()
             idx += 1
 
-        if (idx != req_len):
-            if not ((reqs[0] == None) and (idx == 0)):
-                pos_start.ln = self.line_nums[pos_start.ln]
-                return InvalidInstructionError(pos_start, self.pos, "Not enough arguments given")
+
+
+        if reqs[0] == None: idx += 1
+
+        if (idx < req_len): # if not enough arguments given in the instruction
+            pos_start.ln = self.line_nums[pos_start.ln]
+            return InvalidInstructionError(pos_start, self.pos, "Not enough arguments given")
 
         self.instructions.append(inst_info)
-
+        if inst in DOUBLE_LENGTH_INSTRUCTIONS:
+            self.instructions.append(None)
+        
     def data_label_parse(self):
         pos_start = self.pos.copy()
 
