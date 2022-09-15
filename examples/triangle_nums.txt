@@ -1,0 +1,25 @@
+; Computes the Nth triangle number
+
+.section .data
+n: .byte 8
+result: .space 1
+
+
+.section .text
+    .global main
+
+main:
+    lds r18, n      ; r18 = n
+
+loop:
+    add r19, r18    ; r19 += r18  -> result calculated in r19
+    dec r18         ; n -= 1
+    cpi r18, 1      ; bool( r18 < 1 )
+    brge loop       ; jump to loop if r18 > 0
+
+end:
+    sts result, r19     ; store result in result location
+    ret
+
+
+.end
