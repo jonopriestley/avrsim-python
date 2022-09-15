@@ -27,6 +27,7 @@ class App:
         self.root.title('AVR Basic Sim')
 
         ########## Key Binds ##########
+        self.root.protocol("WM_DELETE_WINDOW", self.root.quit)              # exit correctly with close window button
         self.root.bind("<Escape>", lambda e: self.root.quit())              # exit with < Esc >
         self.root.bind("<Control-r>", lambda e: self.run())                 # run with < Ctrl+R >
         self.root.bind("<Control-s>", lambda e: self.step())                # step with < Ctrl+S >

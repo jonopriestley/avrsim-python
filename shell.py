@@ -6,6 +6,8 @@ path.insert(1, sim_path)
 
 from avr_sim import * # import from avr_sim file in sim
 
+from tkinter.filedialog import askopenfilename
+
 """
 To add a new instruction:
 - Add to INST_LIST (in avr_lexer.py)
@@ -61,13 +63,18 @@ def run(fn, text):
     return result, error
 
 
-
 if __name__ == '__main__':
 
-    if len(sys.argv) < 2: fn = input('Name of file to execute: ')
+    
+    if len(sys.argv) < 2:
+        Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+        fn = askopenfilename() # show an "Open" dialog box and return the path to the selected file
+      
     else: fn = sys.argv[1]
 
-    with open(fn, 'r') as f:
-        lines = f.read()
-        output, error = run(fn, lines)
-        if error: print(error)
+    if fn:
+        with open(fn, 'r') as f:
+            lines = f.read()
+            output, error = run(fn, lines)
+            if error: print(error)
+
