@@ -1330,6 +1330,103 @@ class Interpreter:
         self.pmem_length = len(self.pmem)
         self.dmem_length = len(self.dmem)
 
+        self.fnctmap = {
+            'ADC': self.adc_instruction,
+            'ADD': self.add_instruction,
+            'ADIW': self.adiw_instruction,
+            'AND': self.and_instruction,
+            'ANDI': self.andi_instruction,
+            'ASR': self.asr_instruction,
+            'BCLR': self.bclr_instruction,
+            'BRBC': self.brbc_instruction,
+            'BRBS': self.brbs_instruction,
+            'BRCC': self.brcc_instruction,
+            'BRCS': self.brcs_instruction,
+            'BREQ': self.breq_instruction,
+            'BRGE': self.brge_instruction,
+            'BRHC': self.brhc_instruction,
+            'BRHS': self.brhs_instruction,
+            'BRID': self.brid_instruction,
+            'BRIE': self.brie_instruction,
+            'BRLO': self.brlo_instruction,
+            'BRLT': self.brlt_instruction,
+            'BRMI': self.brmi_instruction,
+            'BRNE': self.brne_instruction,
+            'BRPL': self.brpl_instruction,
+            'BRSH': self.brsh_instruction,
+            'BRTC': self.brtc_instruction,
+            'BRTS': self.brts_instruction,
+            'BRVC': self.brvc_instruction,
+            'BRVS': self.brvs_instruction,
+            'BSET': self.bset_instruction,
+            'CALL': self.call_instruction,
+            'CBI': self.cbi_instruction,
+            'CBR': self.cbr_instruction,
+            'CLC': self.clc_instruction,
+            'CLH': self.clh_instruction,
+            'CLI': self.cli_instruction,
+            'CLN': self.cln_instruction,
+            'CLR': self.clr_instruction,
+            'CLS': self.cls_instruction,
+            'CLT': self.clt_instruction,
+            'CLV': self.clv_instruction,
+            'CLZ': self.clz_instruction,
+            'COM': self.com_instruction,
+            'CP': self.cp_instruction,
+            'CPC': self.cpc_instruction,
+            'CPI': self.cpi_instruction,
+            'DEC': self.dec_instruction,
+            'EOR': self.eor_instruction,
+            'IN': self.in_instruction,
+            'INC': self.inc_instruction,
+            'JMP': self.jmp_instruction,
+            'LD': self.ld_instruction,
+            'LDD': self.ldd_instruction,
+            'LDI': self.ldi_instruction,
+            'LDS': self.lds_instruction,
+            'LSL': self.lsl_instruction,
+            'LSR': self.lsr_instruction,
+            'MOV': self.mov_instruction,
+            'MOVW': self.movw_instruction,
+            'MUL': self.mul_instruction,
+            'MULS': self.muls_instruction,
+            'MULSU': self.mulsu_instruction,
+            'NEG': self.neg_instruction,
+            'NOP': self.nop_instruction,
+            'OR': self.or_instruction,
+            'ORI': self.ori_instruction,
+            'OUT': self.out_instruction,
+            'POP': self.pop_instruction,
+            'PUSH': self.push_instruction,
+            'RJMP': self.rjmp_instruction,
+            'RET': self.ret_instruction,
+            'ROL': self.rol_instruction,
+            'ROR': self.ror_instruction,
+            'SBC': self.sbc_instruction,
+            'SBI': self.sbi_instruction,
+            'SBIW': self.sbiw_instruction,
+            'SBR': self.sbr_instruction,
+            'SBRC': self.sbrc_instruction,
+            'SBRS': self.sbrs_instruction,
+            'SEC': self.sec_instruction,
+            'SEH': self.seh_instruction,
+            'SEI': self.sei_instruction,
+            'SEN': self.sen_instruction,
+            'SER': self.ser_instruction,
+            'SES': self.ses_instruction,
+            'SET': self.set_instruction,
+            'SEV': self.sev_instruction,
+            'SEZ': self.sez_instruction,
+            'ST': self.st_instruction,
+            'STD': self.std_instruction,
+            'STS': self.sts_instruction,
+            'SUB': self.sub_instruction,
+            'SUBI': self.subi_instruction,
+            'SWAP': self.swap_instruction,
+            'TST': self.tst_instruction,
+            'XCH': self.xch_instruction
+        }
+
         #self.pushpop = 0 # counting (pushes - pops) for each subroutine layer
 
     def copy(self):
@@ -1347,915 +1444,895 @@ class Interpreter:
         if self.file_end:
             pass
 
-        elif inst == 'ADC':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value # get Rr value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value # get Rd value
-            C = int(self.sreg.value[7]) # get carry bit
-            R = (Rd + Rr + C) % 256 # calculate result
-            Rd = self.make_8_bit_binary(Rd)
-            
-            self.dmem[int(self.current_inst[1][1:])].set_value(R) # set result register value
-            self.update_pc_val(self.get_pc_val() + 1) # increment PC
-            
-            Rr = self.make_8_bit_binary(Rr)
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[2] = int((int(Rd[4]) & int(Rr[4])) | (int(Rr[4]) & (1 - int(R[4]))) | (int(Rd[4]) & (1 - int(R[4]))))
-            self.sreg.value[4] = int((int(Rd[0]) & int(Rr[0]) & (1 - int(R[0]))) | ((1 - int(Rd[0])) & (1 - int(Rr[0])) & int(R[0])))
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-            self.sreg.value[7] = int((int(Rd[0]) & int(Rr[0])) | (int(Rr[0]) & (1 - int(R[0]))) | (int(Rd[0]) & (1 - int(R[0]))))
+        else:
+            self.fnctmap[inst]()
 
-        elif inst == 'ADD':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            R = (Rd + Rr) % 256
-            Rd = self.make_8_bit_binary(Rd)
 
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            Rr = self.make_8_bit_binary(Rr)
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[2] = int((int(Rd[4]) & int(Rr[4])) | (int(Rr[4]) & (1 - int(R[4]))) | (int(Rd[4]) & (1 - int(R[4]))))
-            self.sreg.value[4] = int((int(Rd[0]) & int(Rr[0]) & (1 - int(R[0]))) | ((1 - int(Rd[0])) & (1 - int(Rr[0])) & int(R[0])))
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-            self.sreg.value[7] = int((int(Rd[0]) & int(Rr[0])) | (int(Rr[0]) & (1 - int(R[0]))) | (int(Rd[0]) & (1 - int(R[0]))))
-
-        elif inst == 'ADIW':
-            Rdl = self.dmem[int(self.current_inst[1][1:])].value
-            Rdh = self.dmem[int(self.current_inst[1][1:]) + 1].value
-            K = int(self.current_inst[2])
-
-            R = (256 * Rdh) + Rdl
-            R = (R + K) % (256 * 256)
-            RLow = R % 256
-            RHigh = int((R - RLow)/256)
-
-            self.dmem[int(self.current_inst[1][1:])].set_value(RLow)
-            self.dmem[int(self.current_inst[1][1:]) + 1].set_value(RHigh)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            Rdh = self.make_8_bit_binary(Rdh)
-            Rdl = self.make_8_bit_binary(Rdl)
-            R = self.make_n_bit_binary(R, 16)
-
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[6] = int(R == '0000000000000000')
-            self.sreg.value[4] = int(R[0]) & (1 - int(Rdh[0]))
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[7] = (1- int(R[0])) & int(Rdh[0])
-
-        elif inst == 'AND':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            R = Rd & Rr
-
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
+    def adc_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value # get Rr value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value # get Rd value
+        C = int(self.sreg.value[7]) # get carry bit
+        R = (Rd + Rr + C) % 256 # calculate result
+        Rd = self.make_8_bit_binary(Rd)
         
-        elif inst == 'ANDI':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            K = int(self.current_inst[2])
-            R = Rd & K
-
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-
-        elif inst == 'ASR':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            R = self.make_8_bit_binary(Rd)
-            C = int(R[7])
-            R = R[0] + R[0:7]
-
-            self.dmem[int(self.current_inst[1][1:])].set_value(int(R, 2))
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[4] = int(R[0]) ^ C
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-            self.sreg.value[7] = C
-
-        elif inst == 'BCLR':
-            s = int(self.current_inst[1])
-            self.sreg.value[7 - s] = 0
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRBC':
-            s = int(self.current_inst[1])
-            k = int(self.current_inst[2])
-            if (self.sreg.value[7 - s] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRBS':
-            s = int(self.current_inst[1])
-            k = int(self.current_inst[2])
-            if (self.sreg.value[7 - s] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRCC':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[7] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRCS':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[7] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BREQ':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[6] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRGE':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[4] ^ self.sreg.value[5] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRHC':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[2] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRHS':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[2] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRID':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[0] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRIE':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[0] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRLO':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[7] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRLT':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[4] ^ self.sreg.value[5] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRMI':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[5] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRNE':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[6] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRPL':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[5] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-            
-        elif inst == 'BRSH':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[7] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRTC':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[1] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRTS':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[1] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRVC':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[4] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BRVS':
-            k = int(self.current_inst[1])
-            if (self.sreg.value[4] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
-            else: self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'BSET':
-            s = int(self.current_inst[1])
-            self.sreg.value[7 - s] = 1
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'CALL':
-            self.update_pc_val(self.get_pc_val() + 2) # same for both if/else statements
-
-            if self.current_inst[1] not in FUNCTIONS:
-                self.dmem[self.get_SP()] = self.pcl.value # adding to stack
-                self.decrement_SP()
-                self.dmem[self.get_SP()] = self.pch.value # adding to stack
-                self.decrement_SP()
-                k = int(self.current_inst[1])
-                self.update_pc_val(k)
-
-            elif self.current_inst[1] == 'PRINTF':
-                ### Pop
-                self.increment_SP()
-                self.dmem[26].set_value(self.dmem[self.get_SP()] ) # R26 = lo8()
-
-                self.increment_SP()
-                self.dmem[27].set_value(self.dmem[self.get_SP()]) # R27 = hi8()
-
-                ### Print
-                printed_string = ''
-                while True:
-                    XYZ = 'X+'
-                    val = self.get_XYZ(XYZ) # dmem value in XYZ
-                    self.increment_XYZ(XYZ) # increments XYZ if necessary
-                    K = self.dmem[val]
-                    if K == 0:
-                        break
-                    char = chr(K)
-                    print(char, end = '') # prints the value
-                    printed_string += char
-                # print('') -> could be used to add \n to end of each line
-
-                ### Push
-                Rr = self.dmem[27].value
-                self.dmem[self.get_SP()] = Rr
-                self.decrement_SP()
-                #self.dmem[27].set_value(Xhigh) # reset the value of R27 to what it was so it isnt disturbed
-
-                Rr = self.dmem[26].value
-                self.dmem[self.get_SP()] = Rr
-                self.decrement_SP()
-                #self.dmem[26].set_value(Xlow) # reset the value of R26 to what it was so it isnt disturbed
-
-                return printed_string
-
-        elif inst == 'CBI':
-            A = int(self.current_inst[1]) + 0x20
-            b = int(self.current_inst[2])
-            self.dmem[A].clear_bit(b)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'CBR':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            K = int(self.current_inst[2])
-            R = Rd & (0xFF - K)
-
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-
-        elif inst == 'CLC':
-            self.sreg.value[7] = 0
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'CLH':
-            self.sreg.value[2] = 0
-            self.update_pc_val(self.get_pc_val() + 1)
-            
-        elif inst == 'CLI':
-            self.sreg.value[0] = 0
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'CLN':
-            self.sreg.value[5] = 0
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'CLR':
-            self.dmem[int(self.current_inst[1][1:])].set_value(0)
-            self.update_pc_val(self.get_pc_val() + 1)
-            self.sreg.value[3] = 0
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = 0
-            self.sreg.value[6] = 1
-
-        elif inst == 'CLS':
-            self.sreg.value[3] = 0
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'CLT':
-            self.sreg.value[1] = 0
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'CLV':
-            self.sreg.value[4] = 0
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'CLZ':
-            self.sreg.value[6] = 0
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'COM':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            R = 0xFF - Rd
-
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = int(R > 127)
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == 0)
-            self.sreg.value[7] = 1
-
-        elif inst == 'CP':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            R = (Rd - Rr) % 256
-
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            Rd = self.make_8_bit_binary(Rd)
-            Rr = self.make_8_bit_binary(Rr)
-            R = self.make_8_bit_binary(R)
-
-            self.sreg.value[2] = int((int(Rr[4]) & int(R[4])) | (int(Rr[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
-            self.sreg.value[4] = int((int(Rr[0]) & int(R[0]) & (1 - int(Rd[0]))) | ((1 - int(Rr[0])) & (1 - int(R[0])) & int(Rd[0])))
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-            self.sreg.value[7] = int((int(Rr[0]) & int(R[0])) | (int(Rr[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+        self.dmem[int(self.current_inst[1][1:])].set_value(R) # set result register value
+        self.update_pc_val(self.get_pc_val() + 1) # increment PC
         
-        elif inst == 'CPC':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            C = self.sreg.value[7]
-            R = (Rd - Rr - C) % 256
+        Rr = self.make_8_bit_binary(Rr)
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[2] = int((int(Rd[4]) & int(Rr[4])) | (int(Rr[4]) & (1 - int(R[4]))) | (int(Rd[4]) & (1 - int(R[4]))))
+        self.sreg.value[4] = int((int(Rd[0]) & int(Rr[0]) & (1 - int(R[0]))) | ((1 - int(Rd[0])) & (1 - int(Rr[0])) & int(R[0])))
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+        self.sreg.value[7] = int((int(Rd[0]) & int(Rr[0])) | (int(Rr[0]) & (1 - int(R[0]))) | (int(Rd[0]) & (1 - int(R[0]))))
 
-            self.update_pc_val(self.get_pc_val() + 1)
+    def add_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        R = (Rd + Rr) % 256
+        Rd = self.make_8_bit_binary(Rd)
 
-            Rd = self.make_8_bit_binary(Rd)
-            Rr = self.make_8_bit_binary(Rr)
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[2] = int((int(Rr[4]) & int(R[4])) | (int(Rr[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
-            self.sreg.value[4] = int((int(Rr[0]) & int(R[0]) & (1 - int(Rd[0]))) | ((1 - int(Rr[0])) & (1 - int(R[0])) & int(Rd[0])))
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int((R == '00000000') & (self.sreg.value[6]))
-            self.sreg.value[7] = int((int(Rr[0]) & int(R[0])) | (int(Rr[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
-            
-        elif inst == 'CPI':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            K = int(self.current_inst[2])
-            R = (Rd - K) % 256
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            self.update_pc_val(self.get_pc_val() + 1)
+        Rr = self.make_8_bit_binary(Rr)
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[2] = int((int(Rd[4]) & int(Rr[4])) | (int(Rr[4]) & (1 - int(R[4]))) | (int(Rd[4]) & (1 - int(R[4]))))
+        self.sreg.value[4] = int((int(Rd[0]) & int(Rr[0]) & (1 - int(R[0]))) | ((1 - int(Rd[0])) & (1 - int(Rr[0])) & int(R[0])))
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+        self.sreg.value[7] = int((int(Rd[0]) & int(Rr[0])) | (int(Rr[0]) & (1 - int(R[0]))) | (int(Rd[0]) & (1 - int(R[0]))))
 
-            Rd = self.make_8_bit_binary(Rd)
-            K = self.make_8_bit_binary(K)
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[2] = int((int(K[4]) & int(R[4])) | (int(K[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
-            self.sreg.value[4] = int((int(K[0]) & int(R[0]) & (1 - int(Rd[0]))) | ((1 - int(K[0])) & (1 - int(R[0])) & int(Rd[0])))
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-            self.sreg.value[7] = int((int(K[0]) & int(R[0])) | (int(K[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+    def adiw_instruction(self):
+        Rdl = self.dmem[int(self.current_inst[1][1:])].value
+        Rdh = self.dmem[int(self.current_inst[1][1:]) + 1].value
+        K = int(self.current_inst[2])
 
-        elif inst == 'DEC':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            R = (Rd - 1) % 256
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        R = (256 * Rdh) + Rdl
+        R = (R + K) % (256 * 256)
+        RLow = R % 256
+        RHigh = int((R - RLow)/256)
 
-            self.update_pc_val(self.get_pc_val() + 1)
+        self.dmem[int(self.current_inst[1][1:])].set_value(RLow)
+        self.dmem[int(self.current_inst[1][1:]) + 1].set_value(RHigh)
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = int(R == '01111111')
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
+        Rdh = self.make_8_bit_binary(Rdh)
+        Rdl = self.make_8_bit_binary(Rdl)
+        R = self.make_n_bit_binary(R, 16)
 
-        elif inst == 'EOR':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            R = Rd ^ Rr
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[6] = int(R == '0000000000000000')
+        self.sreg.value[4] = int(R[0]) & (1 - int(Rdh[0]))
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[7] = (1- int(R[0])) & int(Rdh[0])
 
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
+    def and_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        R = Rd & Rr
 
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'IN':
-            A = self.dmem[int(self.current_inst[2]) + 0x20].value
-            self.dmem[int(self.current_inst[1][1:])].set_value(A)
-            self.update_pc_val(self.get_pc_val() + 1)
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
 
-        elif inst == 'INC':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            R = (Rd + 1) % 256
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
+    def andi_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        K = int(self.current_inst[2])
+        R = Rd & K
 
-            self.update_pc_val(self.get_pc_val() + 1)
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = int(R == '10000000')
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
 
-        elif inst == 'JMP':
+    def asr_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        R = self.make_8_bit_binary(Rd)
+        C = int(R[7])
+        R = R[0] + R[0:7]
+
+        self.dmem[int(self.current_inst[1][1:])].set_value(int(R, 2))
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[4] = int(R[0]) ^ C
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+        self.sreg.value[7] = C
+
+    def bclr_instruction(self):
+        s = int(self.current_inst[1])
+        self.sreg.value[7 - s] = 0
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def brbc_instruction(self):
+        s = int(self.current_inst[1])
+        k = int(self.current_inst[2])
+        if (self.sreg.value[7 - s] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brbs_instruction(self):
+        s = int(self.current_inst[1])
+        k = int(self.current_inst[2])
+        if (self.sreg.value[7 - s] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brcc_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[7] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brcs_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[7] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def breq_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[6] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brge_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[4] ^ self.sreg.value[5] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brhc_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[2] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brhs_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[2] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brid_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[0] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brie_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[0] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brlo_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[7] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brlt_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[4] ^ self.sreg.value[5] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brmi_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[5] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brne_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[6] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brpl_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[5] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brsh_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[7] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brtc_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[1] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brts_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[1] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brvc_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[4] == 0): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def brvs_instruction(self):
+        k = int(self.current_inst[1])
+        if (self.sreg.value[4] == 1): self.update_pc_val(self.get_pc_val() + k + 1)
+        else: self.update_pc_val(self.get_pc_val() + 1)
+
+    def bset_instruction(self):
+        s = int(self.current_inst[1])
+        self.sreg.value[7 - s] = 1
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def call_instruction(self):
+        self.update_pc_val(self.get_pc_val() + 2) # same for both if/else statements
+
+        if self.current_inst[1] not in FUNCTIONS:
+            self.dmem[self.get_SP()] = self.pcl.value # adding to stack
+            self.decrement_SP()
+            self.dmem[self.get_SP()] = self.pch.value # adding to stack
+            self.decrement_SP()
             k = int(self.current_inst[1])
             self.update_pc_val(k)
 
-        elif inst == 'LD':
-            XYZ = self.current_inst[2]
-            self.decrement_XYZ(XYZ) # decrements XYZ if necessary
-            val = self.get_XYZ(XYZ) # dmem value in XYZ
-            K = self.dmem[val]
-            self.dmem[int(self.current_inst[1][1:])].set_value(K)
-            self.update_pc_val(self.get_pc_val() + 1)
-            self.increment_XYZ(XYZ) # increments XYZ if necessary
-        
-        elif inst == 'LDD':
-            XYZ = self.current_inst[2]
-            q = int(self.current_inst[3])
-            val = self.get_XYZ(XYZ) + q # dmem value in XYZ
-            K = self.dmem[val]
-            self.dmem[int(self.current_inst[1][1:])].set_value(K)
-            self.update_pc_val(self.get_pc_val() + 1)
-        
-        elif inst == 'LDI':
-            K = int(self.current_inst[2])
-            self.dmem[int(self.current_inst[1][1:])].set_value(K)
-            self.update_pc_val(self.get_pc_val() + 1)
-        
-        elif inst == 'LDS':
-            k = self.dmem[int(self.current_inst[2])]
-            self.dmem[int(self.current_inst[1][1:])].set_value(k)
-            self.update_pc_val(self.get_pc_val() + 2)
-        
-        elif inst == 'LSL':
-            R = self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value)
-            Rd = R + '0'
-            C = int(Rd[0])
-            Rd = int(Rd[1:], 2)
-            self.dmem[int(self.current_inst[1][1:])].set_value(Rd)
+        elif self.current_inst[1] == 'PRINTF':
+            ### Pop
+            self.increment_SP()
+            self.dmem[26].set_value(self.dmem[self.get_SP()] ) # R26 = lo8()
 
-            self.update_pc_val(self.get_pc_val() + 1)
+            self.increment_SP()
+            self.dmem[27].set_value(self.dmem[self.get_SP()]) # R27 = hi8()
 
-            self.sreg.value[2] = int(R[4])
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[7] = C
-            self.sreg.value[4] = self.sreg.value[5] ^ self.sreg.value[7]
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
+            ### Print
+            printed_string = ''
+            while True:
+                XYZ = 'X+'
+                val = self.get_XYZ(XYZ) # dmem value in XYZ
+                self.increment_XYZ(XYZ) # increments XYZ if necessary
+                K = self.dmem[val]
+                if K == 0:
+                    break
+                char = chr(K)
+                print(char, end = '') # prints the value
+                printed_string += char
+            # print('') -> could be used to add \n to end of each line
 
-        elif inst == 'LSR':
-            R = '0' + self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value)
-            C = int(R[8])
-            Rd = int(R[:8], 2)
-            self.dmem[int(self.current_inst[1][1:])].set_value(Rd)
-
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            self.sreg.value[5] = 0
-            self.sreg.value[7] = C
-            self.sreg.value[4] = self.sreg.value[5] ^ self.sreg.value[7]
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R[:8] == '00000000')
-
-        elif inst == 'MOV':
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            self.dmem[int(self.current_inst[1][1:])].set_value(Rr)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'MOVW':
-            d = int(self.current_inst[1][1:])
-            r = int(self.current_inst[2][1:])
-            Rrl = self.dmem[r].value
-            Rrh = self.dmem[r + 1].value
-
-            self.dmem[d].set_value(Rrl)
-            self.dmem[d + 1].set_value(Rrh)
-            self.update_pc_val(self.get_pc_val() + 1)
-        
-        elif inst == 'MUL':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            R = Rd * Rr
-            R0 = R % 256
-            R1 = int((R - R0) / 256)
-
-            self.dmem[0].set_value(R0)
-            self.dmem[1].set_value(R1)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            self.sreg.value[6] = int(R == 0)
-            self.sreg.value[7] = int(R >= 32768)
-
-        elif inst == 'MULS':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            R = Rd * Rr
-            R0 = R % 256
-            R1 = int((R - R0) / 256)
-
-            self.dmem[0].set_value(R0)
-            self.dmem[1].set_value(R1)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            self.sreg.value[6] = int(R == 0)
-            self.sreg.value[7] = int(R >= 32768)
-
-        elif inst == 'MULSU':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            R = Rd * Rr
-            R0 = R % 256
-            R1 = int((R - R0) / 256)
-
-            self.dmem[0].set_value(R0)
-            self.dmem[1].set_value(R1)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            self.sreg.value[6] = int(R == 0)
-            self.sreg.value[7] = int(R >= 32768)
-
-        elif inst == 'NEG':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            R = (0x00 - Rd) % 256
-            Rd = self.make_8_bit_binary(Rd)
-
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[2] = int(int(R[4]) | (1 - int(Rd[4])))
-            self.sreg.value[4] = int(R == '10000000')
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R != '00000000')
-
-        elif inst == 'NOP':
-            self.update_pc_val(self.get_pc_val() + 1)
-        
-        elif inst == 'OR':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            R = Rd | Rr
-
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-
-        elif inst == 'ORI':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            K = int(self.current_inst[2])
-            R = Rd | K
-
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-
-        elif inst == 'OUT':
-            Rd = self.dmem[int(self.current_inst[2][1:])].value
-            A = int(self.current_inst[1])
-            self.dmem[A + 0x20].set_value(Rd)
-            self.update_pc_val(self.get_pc_val() + 1)
-
-        elif inst == 'POP':
-
-            if self.get_SP() < DMEM_MAX: # check if the top layer has no elements left (ie nothing left in stack)
-                self.increment_SP()
-                STACK = self.dmem[self.get_SP()]
-                self.dmem[int(self.current_inst[1][1:])].set_value(STACK)
-                self.update_pc_val(self.get_pc_val() + 1)
-            else:
-                return RETError(self.get_pc_val(), 'No elements left to pop.')
-            
-        elif inst == 'PUSH':
-            sp = self.get_SP()
-            if sp < 0x100:
-                return StackOverflowError(self.get_pc_val(), f'Cannot push another element to the stack.')
-
-            Rr = self.dmem[int(self.current_inst[1][1:])].value
-            self.dmem[sp] = Rr
+            ### Push
+            Rr = self.dmem[27].value
+            self.dmem[self.get_SP()] = Rr
             self.decrement_SP()
+            #self.dmem[27].set_value(Xhigh) # reset the value of R27 to what it was so it isnt disturbed
+
+            Rr = self.dmem[26].value
+            self.dmem[self.get_SP()] = Rr
+            self.decrement_SP()
+            #self.dmem[26].set_value(Xlow) # reset the value of R26 to what it was so it isnt disturbed
+
+            return printed_string
+
+    def cbi_instruction(self):
+        A = int(self.current_inst[1]) + 0x20
+        b = int(self.current_inst[2])
+        self.dmem[A].clear_bit(b)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def cbr_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        K = int(self.current_inst[2])
+        R = Rd & (0xFF - K)
+
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+
+    def clc_instruction(self):
+        self.sreg.value[7] = 0
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def clh_instruction(self):
+        self.sreg.value[2] = 0
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def cli_instruction(self):
+        self.sreg.value[0] = 0
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def cln_instruction(self):
+        self.sreg.value[5] = 0
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def clr_instruction(self):
+        self.dmem[int(self.current_inst[1][1:])].set_value(0)
+        self.update_pc_val(self.get_pc_val() + 1)
+        self.sreg.value[3] = 0
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = 0
+        self.sreg.value[6] = 1
+
+    def cls_instruction(self):
+        self.sreg.value[3] = 0
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def clt_instruction(self):
+        self.sreg.value[1] = 0
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def clv_instruction(self):
+        self.sreg.value[4] = 0
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def clz_instruction(self):
+        self.sreg.value[6] = 0
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def com_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        R = 0xFF - Rd
+
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = int(R > 127)
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == 0)
+        self.sreg.value[7] = 1
+
+    def cp_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        R = (Rd - Rr) % 256
+
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        Rd = self.make_8_bit_binary(Rd)
+        Rr = self.make_8_bit_binary(Rr)
+        R = self.make_8_bit_binary(R)
+
+        self.sreg.value[2] = int((int(Rr[4]) & int(R[4])) | (int(Rr[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
+        self.sreg.value[4] = int((int(Rr[0]) & int(R[0]) & (1 - int(Rd[0]))) | ((1 - int(Rr[0])) & (1 - int(R[0])) & int(Rd[0])))
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+        self.sreg.value[7] = int((int(Rr[0]) & int(R[0])) | (int(Rr[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+
+    def cpc_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        C = self.sreg.value[7]
+        R = (Rd - Rr - C) % 256
+
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        Rd = self.make_8_bit_binary(Rd)
+        Rr = self.make_8_bit_binary(Rr)
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[2] = int((int(Rr[4]) & int(R[4])) | (int(Rr[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
+        self.sreg.value[4] = int((int(Rr[0]) & int(R[0]) & (1 - int(Rd[0]))) | ((1 - int(Rr[0])) & (1 - int(R[0])) & int(Rd[0])))
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int((R == '00000000') & (self.sreg.value[6]))
+        self.sreg.value[7] = int((int(Rr[0]) & int(R[0])) | (int(Rr[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+
+    def cpi_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        K = int(self.current_inst[2])
+        R = (Rd - K) % 256
+
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        Rd = self.make_8_bit_binary(Rd)
+        K = self.make_8_bit_binary(K)
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[2] = int((int(K[4]) & int(R[4])) | (int(K[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
+        self.sreg.value[4] = int((int(K[0]) & int(R[0]) & (1 - int(Rd[0]))) | ((1 - int(K[0])) & (1 - int(R[0])) & int(Rd[0])))
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+        self.sreg.value[7] = int((int(K[0]) & int(R[0])) | (int(K[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+
+    def dec_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        R = (Rd - 1) % 256
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = int(R == '01111111')
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+
+    def eor_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        R = Rd ^ Rr
+
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+
+    def in_instruction(self):
+        A = self.dmem[int(self.current_inst[2]) + 0x20].value
+        self.dmem[int(self.current_inst[1][1:])].set_value(A)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def inc_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        R = (Rd + 1) % 256
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = int(R == '10000000')
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+
+    def jmp_instruction(self):
+        k = int(self.current_inst[1])
+        self.update_pc_val(k)
+
+    def ld_instruction(self):
+        XYZ = self.current_inst[2]
+        self.decrement_XYZ(XYZ) # decrements XYZ if necessary
+        val = self.get_XYZ(XYZ) # dmem value in XYZ
+        K = self.dmem[val]
+        self.dmem[int(self.current_inst[1][1:])].set_value(K)
+        self.update_pc_val(self.get_pc_val() + 1)
+        self.increment_XYZ(XYZ) # increments XYZ if necessary
+
+    def ldd_instruction(self):
+        XYZ = self.current_inst[2]
+        q = int(self.current_inst[3])
+        val = self.get_XYZ(XYZ) + q # dmem value in XYZ
+        K = self.dmem[val]
+        self.dmem[int(self.current_inst[1][1:])].set_value(K)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def ldi_instruction(self):
+        K = int(self.current_inst[2])
+        self.dmem[int(self.current_inst[1][1:])].set_value(K)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def lds_instruction(self):
+        k = self.dmem[int(self.current_inst[2])]
+        self.dmem[int(self.current_inst[1][1:])].set_value(k)
+        self.update_pc_val(self.get_pc_val() + 2)
+
+    def lsl_instruction(self):
+        R = self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value)
+        Rd = R + '0'
+        C = int(Rd[0])
+        Rd = int(Rd[1:], 2)
+        self.dmem[int(self.current_inst[1][1:])].set_value(Rd)
+
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        self.sreg.value[2] = int(R[4])
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[7] = C
+        self.sreg.value[4] = self.sreg.value[5] ^ self.sreg.value[7]
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+
+    def lsr_instruction(self):
+        R = '0' + self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value)
+        C = int(R[8])
+        Rd = int(R[:8], 2)
+        self.dmem[int(self.current_inst[1][1:])].set_value(Rd)
+
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        self.sreg.value[5] = 0
+        self.sreg.value[7] = C
+        self.sreg.value[4] = self.sreg.value[5] ^ self.sreg.value[7]
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R[:8] == '00000000')
+
+    def mov_instruction(self):
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        self.dmem[int(self.current_inst[1][1:])].set_value(Rr)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def movw_instruction(self):
+        d = int(self.current_inst[1][1:])
+        r = int(self.current_inst[2][1:])
+        Rrl = self.dmem[r].value
+        Rrh = self.dmem[r + 1].value
+
+        self.dmem[d].set_value(Rrl)
+        self.dmem[d + 1].set_value(Rrh)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def mul_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        R = Rd * Rr
+        R0 = R % 256
+        R1 = int((R - R0) / 256)
+
+        self.dmem[0].set_value(R0)
+        self.dmem[1].set_value(R1)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        self.sreg.value[6] = int(R == 0)
+        self.sreg.value[7] = int(R >= 32768)
+
+    def muls_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        R = Rd * Rr
+        R0 = R % 256
+        R1 = int((R - R0) / 256)
+
+        self.dmem[0].set_value(R0)
+        self.dmem[1].set_value(R1)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        self.sreg.value[6] = int(R == 0)
+        self.sreg.value[7] = int(R >= 32768)
+
+    def mulsu_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        R = Rd * Rr
+        R0 = R % 256
+        R1 = int((R - R0) / 256)
+
+        self.dmem[0].set_value(R0)
+        self.dmem[1].set_value(R1)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        self.sreg.value[6] = int(R == 0)
+        self.sreg.value[7] = int(R >= 32768)
+
+    def neg_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        R = (0x00 - Rd) % 256
+        Rd = self.make_8_bit_binary(Rd)
+
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[2] = int(int(R[4]) | (1 - int(Rd[4])))
+        self.sreg.value[4] = int(R == '10000000')
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R != '00000000')
+
+    def nop_instruction(self):
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def or_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        R = Rd | Rr
+
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+
+    def ori_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        K = int(self.current_inst[2])
+        R = Rd | K
+
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+
+    def out_instruction(self):
+        Rd = self.dmem[int(self.current_inst[2][1:])].value
+        A = int(self.current_inst[1])
+        self.dmem[A + 0x20].set_value(Rd)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def pop_instruction(self):
+
+        if self.get_SP() < DMEM_MAX: # check if the top layer has no elements left (ie nothing left in stack)
+            self.increment_SP()
+            STACK = self.dmem[self.get_SP()]
+            self.dmem[int(self.current_inst[1][1:])].set_value(STACK)
             self.update_pc_val(self.get_pc_val() + 1)
+        else:
+            return RETError(self.get_pc_val(), 'No elements left to pop.')
 
-        elif inst == 'RJMP':
-            k = int(self.current_inst[1])
-            self.update_pc_val(self.get_pc_val() + k + 1)
+    def push_instruction(self):
+        sp = self.get_SP()
+        if sp < 0x100:
+            return StackOverflowError(self.get_pc_val(), f'Cannot push another element to the stack.')
 
-        elif inst == 'RET':
+        Rr = self.dmem[int(self.current_inst[1][1:])].value
+        self.dmem[sp] = Rr
+        self.decrement_SP()
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            # If stack pointer at end or all NOPs afterwards then end
-            if (self.get_SP() == DMEM_MAX):
-                self.file_end = True
-            
-            elif (self.get_SP() == DMEM_MAX - 1):
-                return RETError(self.get_pc_val(), f'Invalid stack pointer to return from correctly.')
+    def rjmp_instruction(self):
+        k = int(self.current_inst[1])
+        self.update_pc_val(self.get_pc_val() + k + 1)
 
-            else:
-                self.increment_SP()
-                kH = self.dmem[self.get_SP()]   # return location(high) from the stack
-                self.increment_SP()
-                kL = self.dmem[self.get_SP()]   # return location(low) from the stack
-                #if self.pushpop[-1] < 0:        # must have balanced stack pushes & pops to return correctly
-                #    return RETError(self.get_pc_val(), f'{-1 * self.pushpop[-1]} too many pops from the stack to return correctly.')
-                #elif self.pushpop[-1] > 0:        # must have balanced stack pushes & pops to return correctly
-                #    return RETError(self.get_pc_val(), f'{self.pushpop[-1]} too many pushes to the stack to return correctly.')
-                    
-                self.update_pc_val((256 * kH) + kL)
+    def ret_instruction(self):
 
-        elif inst == 'ROL':
-            R = self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value) + str(self.sreg.value[7])
-            C = int(R[0], 2)
-            Rd = int(R[1:], 2)
-            self.dmem[int(self.current_inst[1][1:])].set_value(Rd)
+        # If stack pointer at end or all NOPs afterwards then end
+        if (self.get_SP() == DMEM_MAX):
+            self.file_end = True
 
-            self.update_pc_val(self.get_pc_val() + 1)
+        elif (self.get_SP() == DMEM_MAX - 1):
+            return RETError(self.get_pc_val(), f'Invalid stack pointer to return from correctly.')
 
-            self.sreg.value[2] = int(R[4])
-            self.sreg.value[5] = int(R[1])
-            self.sreg.value[6] = int(R[1:9] == '00000000')
-            self.sreg.value[7] = C
-            self.sreg.value[4] = self.sreg.value[5] ^ self.sreg.value[7]
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        else:
+            self.increment_SP()
+            kH = self.dmem[self.get_SP()]   # return location(high) from the stack
+            self.increment_SP()
+            kL = self.dmem[self.get_SP()]   # return location(low) from the stack
+            #if self.pushpop[-1] < 0:        # must have balanced stack pushes & pops to return correctly
+            #    return RETError(self.get_pc_val(), f'{-1 * self.pushpop[-1]} too many pops from the stack to return correctly.')
+            #elif self.pushpop[-1] > 0:        # must have balanced stack pushes & pops to return correctly
+            #    return RETError(self.get_pc_val(), f'{self.pushpop[-1]} too many pushes to the stack to return correctly.')
 
-        elif inst == 'ROR':
-            R = str(self.sreg.value[7]) + self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value)
-            C = int(R[8], 2)
-            Rd = int(R[0:8], 2)
-            self.dmem[int(self.current_inst[1][1:])].set_value(Rd)
+            self.update_pc_val((256 * kH) + kL)
 
-            self.update_pc_val(self.get_pc_val() + 1)
+    def rol_instruction(self):
+        R = self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value) + str(self.sreg.value[7])
+        C = int(R[0], 2)
+        Rd = int(R[1:], 2)
+        self.dmem[int(self.current_inst[1][1:])].set_value(Rd)
 
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[6] = int(R[0:8] == '00000000')
-            self.sreg.value[7] = C
-            self.sreg.value[4] = self.sreg.value[5] ^ self.sreg.value[7]
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'SBC':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value # get Rr value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value # get Rd value
-            C = int(self.sreg.value[7]) # get carry bit
-            R = (Rd - Rr - C) % 256 # calculate result
-            Rd = self.make_8_bit_binary(Rd)
-            
-            self.dmem[int(self.current_inst[1][1:])].set_value(R) # set result register value
-            self.update_pc_val(self.get_pc_val() + 1) # increment PC
-            
-            Rr = self.make_8_bit_binary(Rr)
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[2] = int((int(R[4]) & int(Rr[4])) | (int(Rr[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
-            self.sreg.value[4] = int((int(R[0]) & int(Rr[0]) & (1 - int(Rd[0]))) | ((1 - int(R[0])) & (1 - int(Rr[0])) & int(Rd[0])))
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-            self.sreg.value[7] = int((int(R[0]) & int(Rr[0])) | (int(Rr[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+        self.sreg.value[2] = int(R[4])
+        self.sreg.value[5] = int(R[1])
+        self.sreg.value[6] = int(R[1:9] == '00000000')
+        self.sreg.value[7] = C
+        self.sreg.value[4] = self.sreg.value[5] ^ self.sreg.value[7]
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
 
-        elif inst == 'SBI':
-            A = int(self.current_inst[1]) + 0x20
-            b = int(self.current_inst[2])
-            self.dmem[A].set_bit(b)
-            self.update_pc_val(self.get_pc_val() + 1)
+    def ror_instruction(self):
+        R = str(self.sreg.value[7]) + self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value)
+        C = int(R[8], 2)
+        Rd = int(R[0:8], 2)
+        self.dmem[int(self.current_inst[1][1:])].set_value(Rd)
 
-        elif inst == 'SBIW':
-            Rdl = self.dmem[int(self.current_inst[1][1:])].value
-            Rdh = self.dmem[int(self.current_inst[1][1:]) + 1].value
-            K = int(self.current_inst[2])
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            R = (256 * Rdh) + Rdl
-            R = (R - K) % (256 * 256)
-            RLow = R % 256
-            RHigh = int((R - RLow)/256)
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[6] = int(R[0:8] == '00000000')
+        self.sreg.value[7] = C
+        self.sreg.value[4] = self.sreg.value[5] ^ self.sreg.value[7]
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
 
-            self.dmem[int(self.current_inst[1][1:])].set_value(RLow)
-            self.dmem[int(self.current_inst[1][1:]) + 1].set_value(RHigh)
-            self.update_pc_val(self.get_pc_val() + 1)
+    def sbc_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value # get Rr value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value # get Rd value
+        C = int(self.sreg.value[7]) # get carry bit
+        R = (Rd - Rr - C) % 256 # calculate result
+        Rd = self.make_8_bit_binary(Rd)
 
-            Rdh = self.make_8_bit_binary(Rdh)
-            Rdl = self.make_8_bit_binary(Rdl)
-            R = self.make_n_bit_binary(R, 16)
+        self.dmem[int(self.current_inst[1][1:])].set_value(R) # set result register value
+        self.update_pc_val(self.get_pc_val() + 1) # increment PC
 
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[6] = int(R == '0000000000000000')
-            self.sreg.value[4] = (1- int(R[0])) & int(Rdh[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[7] = (1- int(R[0])) & int(Rdh[0])
+        Rr = self.make_8_bit_binary(Rr)
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[2] = int((int(R[4]) & int(Rr[4])) | (int(Rr[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
+        self.sreg.value[4] = int((int(R[0]) & int(Rr[0]) & (1 - int(Rd[0]))) | ((1 - int(R[0])) & (1 - int(Rr[0])) & int(Rd[0])))
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+        self.sreg.value[7] = int((int(R[0]) & int(Rr[0])) | (int(Rr[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
 
-        elif inst == 'SBR':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            K = int(self.current_inst[2])
-            R = Rd | K
+    def sbi_instruction(self):
+        A = int(self.current_inst[1]) + 0x20
+        b = int(self.current_inst[2])
+        self.dmem[A].set_bit(b)
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
+    def sbiw_instruction(self):
+        Rdl = self.dmem[int(self.current_inst[1][1:])].value
+        Rdh = self.dmem[int(self.current_inst[1][1:]) + 1].value
+        K = int(self.current_inst[2])
 
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
+        R = (256 * Rdh) + Rdl
+        R = (R - K) % (256 * 256)
+        RLow = R % 256
+        RHigh = int((R - RLow)/256)
 
-        elif inst == 'SBRC':
-            Rr = self.dmem[int(self.current_inst[1][1:])].value
-            b = int(self.current_inst[2])
-            
-            R = (Rr & (2**b)) == 0 # check the b-th bit of R
+        self.dmem[int(self.current_inst[1][1:])].set_value(RLow)
+        self.dmem[int(self.current_inst[1][1:]) + 1].set_value(RHigh)
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            if R and (self.pmem[self.get_pc_val() + 2] != None): self.update_pc_val(self.get_pc_val() + 2)
-            elif R: self.update_pc_val(self.get_pc_val() + 3)
-            else: self.update_pc_val(self.get_pc_val() + 1)
+        Rdh = self.make_8_bit_binary(Rdh)
+        Rdl = self.make_8_bit_binary(Rdl)
+        R = self.make_n_bit_binary(R, 16)
 
-        elif inst == 'SBRS':
-            Rr = self.dmem[int(self.current_inst[1][1:])].value
-            b = int(self.current_inst[2])
-            
-            R = (Rr & (2**b)) != 0 # check the b-th bit of R
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[6] = int(R == '0000000000000000')
+        self.sreg.value[4] = (1- int(R[0])) & int(Rdh[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[7] = (1- int(R[0])) & int(Rdh[0])
 
-            if R and (self.pmem[self.get_pc_val() + 2] != None): self.update_pc_val(self.get_pc_val() + 2)
-            elif R: self.update_pc_val(self.get_pc_val() + 3)
-            else: self.update_pc_val(self.get_pc_val() + 1)
+    def sbr_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        K = int(self.current_inst[2])
+        R = Rd | K
 
-        elif inst == 'SEC':
-            self.sreg.value[7] = 1
-            self.update_pc_val(self.get_pc_val() + 1)
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'SEH':
-            self.sreg.value[2] = 1
-            self.update_pc_val(self.get_pc_val() + 1)
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
 
-        elif inst == 'SEI':
-            self.sreg.value[0] = 1
-            self.update_pc_val(self.get_pc_val() + 1)
+    def sbrc_instruction(self):
+        Rr = self.dmem[int(self.current_inst[1][1:])].value
+        b = int(self.current_inst[2])
 
-        elif inst == 'SEN':
-            self.sreg.value[5] = 1
-            self.update_pc_val(self.get_pc_val() + 1)
+        R = (Rr & (2**b)) == 0 # check the b-th bit of R
 
-        elif inst == 'SER':
-            self.dmem[int(self.current_inst[1][1:])].set_value(0xFF)
-            self.update_pc_val(self.get_pc_val() + 1)
+        if R and (self.pmem[self.get_pc_val() + 2] != None): self.update_pc_val(self.get_pc_val() + 2)
+        elif R: self.update_pc_val(self.get_pc_val() + 3)
+        else: self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'SES':
-            self.sreg.value[3] = 1
-            self.update_pc_val(self.get_pc_val() + 1)
+    def sbrs_instruction(self):
+        Rr = self.dmem[int(self.current_inst[1][1:])].value
+        b = int(self.current_inst[2])
 
-        elif inst == 'SET':
-            self.sreg.value[1] = 1
-            self.update_pc_val(self.get_pc_val() + 1)
+        R = (Rr & (2**b)) != 0 # check the b-th bit of R
 
-        elif inst == 'SEV':
-            self.sreg.value[4] = 1
-            self.update_pc_val(self.get_pc_val() + 1)
+        if R and (self.pmem[self.get_pc_val() + 2] != None): self.update_pc_val(self.get_pc_val() + 2)
+        elif R: self.update_pc_val(self.get_pc_val() + 3)
+        else: self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'SEZ':
-            self.sreg.value[6] = 1
-            self.update_pc_val(self.get_pc_val() + 1)
+    def sec_instruction(self):
+        self.sreg.value[7] = 1
+        self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'ST':
-            XYZ = self.current_inst[1]
-            self.decrement_XYZ(XYZ) # decrements XYZ if necessary
-            val = self.get_XYZ(XYZ) # dmem value in XYZ
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            self.dmem[val] = Rr
-            self.update_pc_val(self.get_pc_val() + 1)
-            self.increment_XYZ(XYZ) # increments XYZ if necessary
+    def seh_instruction(self):
+        self.sreg.value[2] = 1
+        self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'STD':
-            XYZ = self.current_inst[1]
-            q = int(self.current_inst[2])
-            val = self.get_XYZ(XYZ) + q # dmem value in XYZ
-            Rr = self.dmem[int(self.current_inst[3][1:])].value
-            self.dmem[val] = Rr
-            self.update_pc_val(self.get_pc_val() + 1)
+    def sei_instruction(self):
+        self.sreg.value[0] = 1
+        self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'STS':
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            self.dmem[int(self.current_inst[1])] = Rr
-            self.update_pc_val(self.get_pc_val() + 2)
+    def sen_instruction(self):
+        self.sreg.value[5] = 1
+        self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'SUB':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            Rr = self.dmem[int(self.current_inst[2][1:])].value
-            R = (Rd - Rr) % 256
-            Rd = self.make_8_bit_binary(Rd)
+    def ser_instruction(self):
+        self.dmem[int(self.current_inst[1][1:])].set_value(0xFF)
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
+    def ses_instruction(self):
+        self.sreg.value[3] = 1
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            Rr = self.make_8_bit_binary(Rr)
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[2] = int((int(R[4]) & int(Rr[4])) | (int(Rr[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
-            self.sreg.value[4] = int((int(R[0]) & int(Rr[0]) & (1 - int(Rd[0]))) | ((1 - int(R[0])) & (1 - int(Rr[0])) & int(Rd[0])))
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-            self.sreg.value[7] = int((int(R[0]) & int(Rr[0])) | (int(Rr[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+    def set_instruction(self):
+        self.sreg.value[1] = 1
+        self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'SUBI':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            K = int(self.current_inst[2])
-            R = (Rd - K) % 256
-            Rd = self.make_8_bit_binary(Rd)
+    def sev_instruction(self):
+        self.sreg.value[4] = 1
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
+    def sez_instruction(self):
+        self.sreg.value[6] = 1
+        self.update_pc_val(self.get_pc_val() + 1)
 
-            K = self.make_8_bit_binary(K)
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[2] = int((int(K[4]) & int(R[4])) | (int(K[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
-            self.sreg.value[4] = int((int(R[0]) & int(K[0]) & (1 - int(Rd[0]))) | ((1 - int(R[0])) & (1 - int(K[0])) & int(Rd[0])))
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
-            self.sreg.value[7] = int((int(K[0]) & int(R[0])) | (int(K[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+    def st_instruction(self):
+        XYZ = self.current_inst[1]
+        self.decrement_XYZ(XYZ) # decrements XYZ if necessary
+        val = self.get_XYZ(XYZ) # dmem value in XYZ
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        self.dmem[val] = Rr
+        self.update_pc_val(self.get_pc_val() + 1)
+        self.increment_XYZ(XYZ) # increments XYZ if necessary
 
-        elif inst == 'SWAP':
-            Rd = self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value)
-            Rd = Rd[4:8] + Rd[0:4]
-            self.dmem[int(self.current_inst[1][1:])].set_value(int(Rd, 2))
-            self.update_pc_val(self.get_pc_val() + 1)
+    def std_instruction(self):
+        XYZ = self.current_inst[1]
+        q = int(self.current_inst[2])
+        val = self.get_XYZ(XYZ) + q # dmem value in XYZ
+        Rr = self.dmem[int(self.current_inst[3][1:])].value
+        self.dmem[val] = Rr
+        self.update_pc_val(self.get_pc_val() + 1)
 
-        elif inst == 'TST':
-            Rd = self.dmem[int(self.current_inst[1][1:])].value
-            R = Rd & Rd
+    def sts_instruction(self):
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        self.dmem[int(self.current_inst[1])] = Rr
+        self.update_pc_val(self.get_pc_val() + 2)
 
-            self.dmem[int(self.current_inst[1][1:])].set_value(R)
-            self.update_pc_val(self.get_pc_val() + 1)
+    def sub_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        Rr = self.dmem[int(self.current_inst[2][1:])].value
+        R = (Rd - Rr) % 256
+        Rd = self.make_8_bit_binary(Rd)
 
-            R = self.make_8_bit_binary(R)
-            self.sreg.value[4] = 0
-            self.sreg.value[5] = int(R[0])
-            self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
-            self.sreg.value[6] = int(R == '00000000')
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        Rr = self.make_8_bit_binary(Rr)
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[2] = int((int(R[4]) & int(Rr[4])) | (int(Rr[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
+        self.sreg.value[4] = int((int(R[0]) & int(Rr[0]) & (1 - int(Rd[0]))) | ((1 - int(R[0])) & (1 - int(Rr[0])) & int(Rd[0])))
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+        self.sreg.value[7] = int((int(R[0]) & int(Rr[0])) | (int(Rr[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+
+    def subi_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        K = int(self.current_inst[2])
+        R = (Rd - K) % 256
+        Rd = self.make_8_bit_binary(Rd)
+
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        K = self.make_8_bit_binary(K)
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[2] = int((int(K[4]) & int(R[4])) | (int(K[4]) & (1 - int(Rd[4]))) | (int(R[4]) & (1 - int(Rd[4]))))
+        self.sreg.value[4] = int((int(R[0]) & int(K[0]) & (1 - int(Rd[0]))) | ((1 - int(R[0])) & (1 - int(K[0])) & int(Rd[0])))
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
+        self.sreg.value[7] = int((int(K[0]) & int(R[0])) | (int(K[0]) & (1 - int(Rd[0]))) | (int(R[0]) & (1 - int(Rd[0]))))
+
+    def swap_instruction(self):
+        Rd = self.make_8_bit_binary(self.dmem[int(self.current_inst[1][1:])].value)
+        Rd = Rd[4:8] + Rd[0:4]
+        self.dmem[int(self.current_inst[1][1:])].set_value(int(Rd, 2))
+        self.update_pc_val(self.get_pc_val() + 1)
+
+    def tst_instruction(self):
+        Rd = self.dmem[int(self.current_inst[1][1:])].value
+        R = Rd & Rd
+
+        self.dmem[int(self.current_inst[1][1:])].set_value(R)
+        self.update_pc_val(self.get_pc_val() + 1)
+
+        R = self.make_8_bit_binary(R)
+        self.sreg.value[4] = 0
+        self.sreg.value[5] = int(R[0])
+        self.sreg.value[3] = self.sreg.value[4] ^ self.sreg.value[5]
+        self.sreg.value[6] = int(R == '00000000')
 
 
-        elif inst == 'XCH':
-            Z = self.get_XYZ('Z')
-            Rd = self.dmem[int(self.current_inst[2][1:])].value
-            
-            self.dmem[int(self.current_inst[2][1:])].set_value(self.dmem[Z]) # Rd <- Z
-            self.dmem[Z] = Rd # Z <- Rd
+    def xch_instruction(self):
+        Z = self.get_XYZ('Z')
+        Rd = self.dmem[int(self.current_inst[2][1:])].value
 
-            self.update_pc_val(self.get_pc_val() + 1)
+        self.dmem[int(self.current_inst[2][1:])].set_value(self.dmem[Z]) # Rd <- Z
+        self.dmem[Z] = Rd # Z <- Rd
 
-    def get_H(self, Rd3, Rr3, R3):
-        Rd3 = int(Rd3)
-        Rr3 = int(Rr3)
-        R3 = int(R3)
-        return int( (Rd3 & Rr3) | (Rr3 & (1 - R3)) | ((1 - R3) & Rd3) )
+        self.update_pc_val(self.get_pc_val() + 1)
 
     def get_S(self, N, V):
         return int(N ^ V)
-
-    def get_V(self, Rd7, Rr7, R7):
-        Rd7 = int(Rd7)
-        Rr7 = int(Rr7)
-        R7 = int(R7)
-        return int( (Rd7 & Rr7 & (1 - R7)) | ((1 - Rd7) & (1 - Rr7) & R7) )
-
-    def get_N(self, R7):
-        return int(R7)
-
-    def get_Z(self, R):
-        return int(int(R, 2) == 0)
-
-    def get_C(self, Rd7, Rr7, R7):
-        Rd7 = int(Rd7)
-        Rr7 = int(Rr7)
-        R7 = int(R7)
-        return int( (Rd7 & Rr7) | (Rr7 & (1 - R7)) | ((1 - R7) & Rd7) )
 
     def get_XYZ(self, XYZ):
         if 'X' in XYZ:
@@ -3606,6 +3683,7 @@ def run(fn, text):
 
     line_nums = tokens[-1]                  # allocating the locations of each line
     tokens = tokens[0:(len(tokens) - 1)]    # removing line nums from last pos in tokens
+
 
     ########### Parser ###########
     parser = Parser(fn, tokens, line_nums)
